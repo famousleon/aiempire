@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#bf4dff"/>
+      <stop offset="50%" style="stop-color:#ff6b9d"/>
+      <stop offset="100%" style="stop-color:#ff9f0a"/>
+    </linearGradient>
+    <linearGradient id="earGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b9d"/>
+      <stop offset="100%" style="stop-color:#bf4dff"/>
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff3b30"/>
+      <stop offset="100%" style="stop-color:#ff6b9d"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Ears -->
+  <polygon points="50,65 30,15 80,45" fill="url(#earGrad)" filter="url(#shadow)"/>
+  <polygon points="150,65 170,15 120,45" fill="url(#earGrad)" filter="url(#shadow)"/>
+
+  <!-- Inner ears -->
+  <polygon points="55,60 40,25 75,48" fill="#ff9f0a" opacity="0.6"/>
+  <polygon points="145,60 160,25 125,48" fill="#ff9f0a" opacity="0.6"/>
+
+  <!-- Head -->
+  <ellipse cx="100" cy="105" rx="62" ry="58" fill="url(#bodyGrad)" filter="url(#shadow)"/>
+
+  <!-- Face lighter area -->
+  <ellipse cx="100" cy="112" rx="42" ry="38" fill="white" opacity="0.12"/>
+
+  <!-- Eyes - slightly evil slanted -->
+  <g filter="url(#glow)">
+    <!-- Left eye -->
+    <ellipse cx="78" cy="95" rx="14" ry="12" fill="#1a1a1a"/>
+    <ellipse cx="78" cy="95" rx="11" ry="9" fill="url(#eyeGrad)"/>
+    <ellipse cx="78" cy="95" rx="5" ry="8" fill="#1a1a1a"/>
+    <!-- Left eye shine -->
+    <circle cx="83" cy="90" r="3" fill="white" opacity="0.8"/>
+
+    <!-- Right eye -->
+    <ellipse cx="122" cy="95" rx="14" ry="12" fill="#1a1a1a"/>
+    <ellipse cx="122" cy="95" rx="11" ry="9" fill="url(#eyeGrad)"/>
+    <ellipse cx="122" cy="95" rx="5" ry="8" fill="#1a1a1a"/>
+    <!-- Right eye shine -->
+    <circle cx="127" cy="90" r="3" fill="white" opacity="0.8"/>
+  </g>
+
+  <!-- Evil eyebrows - slightly angled down toward center -->
+  <line x1="62" y1="80" x2="88" y2="83" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="138" y1="80" x2="112" y2="83" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <ellipse cx="100" cy="110" rx="5" ry="3.5" fill="#ff6b9d"/>
+
+  <!-- Mouth - cute but evil smirk -->
+  <path d="M85 118 Q92 126 100 120 Q108 126 115 118" stroke="#1a1a1a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Whiskers -->
+  <line x1="35" y1="105" x2="65" y2="108" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+  <line x1="35" y1="115" x2="65" y2="114" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+  <line x1="38" y1="125" x2="65" y2="120" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+
+  <line x1="165" y1="105" x2="135" y2="108" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+  <line x1="165" y1="115" x2="135" y2="114" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+  <line x1="162" y1="125" x2="135" y2="120" stroke="white" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+
+  <!-- Blush -->
+  <ellipse cx="65" cy="115" rx="12" ry="7" fill="#ff6b9d" opacity="0.3"/>
+  <ellipse cx="135" cy="115" rx="12" ry="7" fill="#ff6b9d" opacity="0.3"/>
+
+  <!-- Crown (AI ruler!) -->
+  <g transform="translate(100, 38)">
+    <polygon points="-18,12 -22,-4 -10,4 0,-8 10,4 22,-4 18,12" fill="#ffd60a" stroke="#ff9f0a" stroke-width="1"/>
+    <!-- Crown gems -->
+    <circle cx="-10" cy="2" r="2" fill="#ff3b30"/>
+    <circle cx="0" cy="-2" r="2.5" fill="#00d4aa"/>
+    <circle cx="10" cy="2" r="2" fill="#6482ff"/>
+  </g>
+
+  <!-- Subtle evil grin line -->
+  <path d="M110 124 Q114 128 118 125" stroke="#ff3b30" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+</svg>
