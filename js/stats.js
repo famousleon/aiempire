@@ -106,13 +106,26 @@ const StatsManager = (() => {
 
   function getWeeklyData() {
     const weekData = [];
-    const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+    const lang = typeof I18n !== 'undefined' ? I18n.getLangCode() : 'zh';
+    const localeMap = {
+      zh: 'zh-CN', en: 'en-US', es: 'es-ES', ar: 'ar-SA', pt: 'pt-BR', ja: 'ja-JP',
+    };
+    const locale = localeMap[lang] || 'en-US';
+    const dayLabels = {
+      zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+      en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      es: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+      ar: ['أحد', 'إثن', 'ثلا', 'أرب', 'خمي', 'جمع', 'سبت'],
+      pt: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+      ja: ['日', '月', '火', '水', '木', '金', '土'],
+    };
+    const labels = dayLabels[lang] || dayLabels['en'];
 
     for (let i = 6; i >= 0; i--) {
       const date = new Date(Date.now() - i * 86400000);
       const key = date.toISOString().split('T')[0];
       weekData.push({
-        day: '周' + dayNames[date.getDay()],
+        day: labels[date.getDay()],
         count: stats.weeklyCompletion[key] || 0,
         isToday: i === 0,
       });

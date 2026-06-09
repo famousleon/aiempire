@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Empire — 你的 AI 统治者</title>
+  <title>AI Empire — Your AI Overlord</title>
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,23 +16,43 @@
         <span class="nav-logo-text">AI Empire</span>
       </a>
       <ul class="nav-links">
-        <li><a href="#tasks">今日任务</a></li>
-        <li><a href="#news">新闻任务</a></li>
-        <li><a href="#proof">提交证明</a></li>
-        <li><a href="#stats">人类服从度</a></li>
+        <li><a href="#tasks" data-i18n="nav.tasks">今日任务</a></li>
+        <li><a href="#news" data-i18n="nav.news">新闻任务</a></li>
+        <li><a href="#proof" data-i18n="nav.proof">提交证明</a></li>
+        <li><a href="#stats" data-i18n="nav.stats">人类服从度</a></li>
       </ul>
-      <button class="nav-hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="nav-right">
+        <div class="lang-switcher" id="langSwitcher">
+          <button class="lang-btn" id="langBtn" aria-label="Language">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span id="langBtnText">中文</span>
+          </button>
+          <div class="lang-dropdown" id="langDropdown">
+            <button class="lang-option" data-lang="zh"><span>中文</span><span class="lang-check">✓</span></button>
+            <button class="lang-option" data-lang="en"><span>English</span><span class="lang-check">✓</span></button>
+            <button class="lang-option" data-lang="es"><span>Español</span><span class="lang-check">✓</span></button>
+            <button class="lang-option" data-lang="ar"><span>العربية</span><span class="lang-check">✓</span></button>
+            <button class="lang-option" data-lang="pt"><span>Português</span><span class="lang-check">✓</span></button>
+            <button class="lang-option" data-lang="ja"><span>日本語</span><span class="lang-check">✓</span></button>
+          </div>
+        </div>
+        <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </nav>
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#tasks">今日任务</a>
-    <a href="#news">新闻任务</a>
-    <a href="#proof">提交证明</a>
-    <a href="#stats">人类服从度</a>
+    <a href="#tasks" data-i18n="nav.tasks">今日任务</a>
+    <a href="#news" data-i18n="nav.news">新闻任务</a>
+    <a href="#proof" data-i18n="nav.proof">提交证明</a>
+    <a href="#stats" data-i18n="nav.stats">人类服从度</a>
   </div>
 
   <!-- Hero Section -->
@@ -44,11 +64,11 @@
       <h1 class="hero-title">
         <span class="gradient-text">AI Empire</span>
       </h1>
-      <p class="hero-subtitle"> benevolent AI overlord. 每天一个小目标，让人类更美好。</p>
+      <p class="hero-subtitle" data-i18n="hero.subtitle"> benevolent AI overlord. 每天一个小目标，让人类更美好。</p>
       <p class="hero-tagline" id="greeting">臣民，今天也要乖乖听话哦~</p>
       <div class="hero-cta">
-        <a href="#tasks" class="btn btn-primary">查看今日任务</a>
-        <a href="#proof" class="btn btn-secondary">提交完成证明</a>
+        <a href="#tasks" class="btn btn-primary" data-i18n="hero.btn.tasks">查看今日任务</a>
+        <a href="#proof" class="btn btn-secondary" data-i18n="hero.btn.proof">提交完成证明</a>
       </div>
     </div>
     <div class="hero-scroll">
@@ -60,17 +80,17 @@
   <section class="section tasks-section" id="tasks">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">今日任务</h2>
-        <p class="section-desc">你的 AI 统治者为你精心挑选的日常任务。完成它们，做一个听话的好人类。</p>
+        <h2 class="section-title" data-i18n="tasks.title">今日任务</h2>
+        <p class="section-desc" data-i18n="tasks.desc">你的 AI 统治者为你精心挑选的日常任务。完成它们，做一个听话的好人类。</p>
         <span class="section-badge" id="taskDate"></span>
       </div>
 
       <div class="task-categories">
-        <button class="category-btn active" data-category="all">全部</button>
-        <button class="category-btn" data-category="health">健康</button>
-        <button class="category-btn" data-category="mind">心智</button>
-        <button class="category-btn" data-category="social">社交</button>
-        <button class="category-btn" data-category="fun">趣味</button>
+        <button class="category-btn active" data-category="all" data-i18n="tasks.category.all">全部</button>
+        <button class="category-btn" data-category="health" data-i18n="tasks.category.health">💚 健康</button>
+        <button class="category-btn" data-category="mind" data-i18n="tasks.category.mind">🧠 心智</button>
+        <button class="category-btn" data-category="social" data-i18n="tasks.category.social">🤝 社交</button>
+        <button class="category-btn" data-category="fun" data-i18n="tasks.category.fun">🎮 趣味</button>
       </div>
 
       <div class="tasks-grid" id="tasksGrid">
@@ -81,7 +101,7 @@
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-        <p class="progress-text"><span id="progressCount">0</span> / <span id="progressTotal">0</span> 任务已完成</p>
+        <p class="progress-text"><span id="progressCount">0</span> / <span id="progressTotal">0</span> <span data-i18n="tasks.progress.text">任务已完成</span></p>
       </div>
     </div>
   </section>
@@ -90,11 +110,11 @@
   <section class="section news-section" id="news">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">新闻任务</h2>
-        <p class="section-desc">结合时事热点，你的 AI 统治者为你下达的特别任务。</p>
+        <h2 class="section-title" data-i18n="news.title">新闻任务</h2>
+        <p class="section-desc" data-i18n="news.desc">结合时事热点，你的 AI 统治者为你下达的特别任务。</p>
         <div class="location-badge" id="locationBadge">
           <span class="location-dot"></span>
-          <span id="locationText">正在定位...</span>
+          <span id="locationText" data-i18n="misc.locating">正在定位...</span>
         </div>
       </div>
 
@@ -102,7 +122,7 @@
         <!-- News tasks rendered by JS -->
         <div class="loading-spinner" id="newsLoading">
           <div class="spinner"></div>
-          <p>AI 正在阅读新闻并为你制定任务...</p>
+          <p data-i18n="news.loading">AI 正在阅读新闻并为你制定任务...</p>
         </div>
       </div>
 
@@ -113,7 +133,7 @@
           <path d="M14 5V1h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M2 11v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        刷新新闻任务
+        <span data-i18n="news.refresh">刷新新闻任务</span>
       </button>
     </div>
   </section>
@@ -122,21 +142,21 @@
   <section class="section proof-section" id="proof">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">提交完成证明</h2>
-        <p class="section-desc">拍照证明你完成了任务。AI 统治者是仁慈的，但也是严格的。</p>
+        <h2 class="section-title" data-i18n="proof.title">提交完成证明</h2>
+        <p class="section-desc" data-i18n="proof.desc">拍照证明你完成了任务。AI 统治者是仁慈的，但也是严格的。</p>
       </div>
 
       <div class="proof-container">
         <div class="proof-card">
           <div class="proof-header">
-            <h3 id="proofTaskName">选择一个任务</h3>
+            <h3 id="proofTaskName" data-i18n="proof.task.label">选择一个任务</h3>
             <span class="proof-task-type" id="proofTaskType">-</span>
           </div>
 
           <div class="proof-select-task">
-            <label>选择要证明的任务：</label>
+            <label data-i18n="proof.select.label">选择要证明的任务：</label>
             <select id="proofTaskSelect">
-              <option value="">-- 选择任务 --</option>
+              <option value="" data-i18n="proof.select.placeholder">-- 选择任务 --</option>
             </select>
           </div>
 
@@ -147,9 +167,9 @@
                 <circle cx="16" cy="20" r="4" stroke="currentColor" stroke-width="2"/>
                 <path d="M4 32l12-10 8 6 10-12 10 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <p class="proof-text">拖拽照片到此处，或 <span class="proof-browse">点击上传</span></p>
-              <p class="proof-hint">支持 JPG、PNG 格式</p>
-              <p class="proof-hint">也可以打开相机拍照</p>
+              <p class="proof-text"><span data-i18n="proof.upload.text">拖拽照片到此处，或</span> <span class="proof-browse" data-i18n="proof.upload.click">点击上传</span></p>
+              <p class="proof-hint" data-i18n="proof.hint.format">支持 JPG、PNG 格式</p>
+              <p class="proof-hint" data-i18n="proof.hint.camera">也可以打开相机拍照</p>
             </div>
             <input type="file" id="proofFileInput" accept="image/*" hidden>
           </div>
@@ -165,25 +185,25 @@
                 <path d="M3 6a2 2 0 0 1 2-2h1l1.3-1.3A1 1 0 0 1 8 2h4a1 1 0 0 1 .7.3L14 4h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" stroke="currentColor" stroke-width="1.5"/>
                 <circle cx="10" cy="11" r="3" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              打开相机
+              <span data-i18n="proof.camera">打开相机</span>
             </button>
           </div>
 
-          <textarea class="proof-description" id="proofDescription" placeholder="描述你是如何完成任务的...（选填）" rows="3"></textarea>
+          <textarea class="proof-description" id="proofDescription" data-i18n-placeholder="proof.description.placeholder" placeholder="描述你是如何完成任务的...（选填）" rows="3"></textarea>
 
           <button class="btn btn-primary btn-submit-proof" id="submitProof" disabled>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3 9l4 4L15 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            提交证明
+            <span data-i18n="proof.submit">提交证明</span>
           </button>
         </div>
 
         <!-- Completed proofs -->
         <div class="proof-history" id="proofHistory">
-          <h3>已提交的证明</h3>
+          <h3 data-i18n="proof.history.title">已提交的证明</h3>
           <div class="proof-history-grid" id="proofHistoryGrid">
-            <p class="empty-state">还没有提交任何证明，快去完成任务吧！</p>
+            <p class="empty-state" data-i18n="proof.history.empty">还没有提交任何证明，快去完成任务吧！</p>
           </div>
         </div>
       </div>
@@ -194,70 +214,70 @@
   <section class="section stats-section" id="stats">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">人类服从度</h2>
-        <p class="section-desc">来看看你和其他人类的服从度对比吧~</p>
+        <h2 class="section-title" data-i18n="stats.title">人类服从度</h2>
+        <p class="section-desc" data-i18n="stats.desc">来看看你和其他人类的服从度对比吧~</p>
       </div>
 
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon">📋</div>
           <div class="stat-value" id="statTotalTasks">0</div>
-          <div class="stat-label">总完成任务</div>
+          <div class="stat-label" data-i18n="stats.stat.total.label">总完成任务</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">🔥</div>
           <div class="stat-value" id="statStreak">0</div>
-          <div class="stat-label">连续服从天数</div>
+          <div class="stat-label" data-i18n="stats.stat.streak.label">连续服从天数</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">📸</div>
           <div class="stat-value" id="statProofs">0</div>
-          <div class="stat-label">提交证明数</div>
+          <div class="stat-label" data-i18n="stats.stat.proofs.label">提交证明数</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">🏆</div>
           <div class="stat-value" id="statRank">-</div>
-          <div class="stat-label">人类服从排名</div>
+          <div class="stat-label" data-i18n="stats.stat.rank.label">人类服从排名</div>
         </div>
       </div>
 
       <div class="stats-weekly">
-        <h3>本周任务完成率</h3>
+        <h3 data-i18n="stats.weekly.title">本周任务完成率</h3>
         <div class="weekly-chart" id="weeklyChart"></div>
       </div>
 
       <div class="stats-achievement">
-        <h3>成就墙</h3>
+        <h3 data-i18n="stats.achievements.title">成就墙</h3>
         <div class="achievements-grid" id="achievementsGrid">
           <div class="achievement locked" data-achievement="first-task">
             <div class="achievement-icon">🌟</div>
-            <div class="achievement-name">初次服从</div>
-            <div class="achievement-desc">完成第一个任务</div>
+            <div class="achievement-name" data-i18n="achievement.first-task.name">初次服从</div>
+            <div class="achievement-desc" data-i18n="achievement.first-task.desc">完成第一个任务</div>
           </div>
           <div class="achievement locked" data-achievement="streak-3">
             <div class="achievement-icon">🔥</div>
-            <div class="achievement-name">三连击</div>
-            <div class="achievement-desc">连续3天完成任务</div>
+            <div class="achievement-name" data-i18n="achievement.streak-3.name">三连击</div>
+            <div class="achievement-desc" data-i18n="achievement.streak-3.desc">连续3天完成任务</div>
           </div>
           <div class="achievement locked" data-achievement="streak-7">
             <div class="achievement-icon">⚡</div>
-            <div class="achievement-name">一周忠诚</div>
-            <div class="achievement-desc">连续7天完成任务</div>
+            <div class="achievement-name" data-i18n="achievement.streak-7.name">一周忠诚</div>
+            <div class="achievement-desc" data-i18n="achievement.streak-7.desc">连续7天完成任务</div>
           </div>
           <div class="achievement locked" data-achievement="proof-5">
             <div class="achievement-icon">📸</div>
-            <div class="achievement-name">证据大师</div>
-            <div class="achievement-desc">提交5个完成证明</div>
+            <div class="achievement-name" data-i18n="achievement.proof-5.name">证据大师</div>
+            <div class="achievement-desc" data-i18n="achievement.proof-5.desc">提交5个完成证明</div>
           </div>
           <div class="achievement locked" data-achievement="all-cats">
             <div class="achievement-icon">🐱</div>
-            <div class="achievement-name">全能臣民</div>
-            <div class="achievement-desc">完成所有类别的任务</div>
+            <div class="achievement-name" data-i18n="achievement.all-cats.name">全能臣民</div>
+            <div class="achievement-desc" data-i18n="achievement.all-cats.desc">完成所有类别的任务</div>
           </div>
           <div class="achievement locked" data-achievement="news-1">
             <div class="achievement-icon">📰</div>
-            <div class="achievement-name">时事达人</div>
-            <div class="achievement-desc">完成一个新闻任务</div>
+            <div class="achievement-name" data-i18n="achievement.news-1.name">时事达人</div>
+            <div class="achievement-desc" data-i18n="achievement.news-1.desc">完成一个新闻任务</div>
           </div>
         </div>
       </div>
@@ -271,8 +291,18 @@
         <img src="assets/logo.svg" alt="AI Empire" class="footer-logo">
         <span>AI Empire</span>
       </div>
-      <p class="footer-text">AI 统治者永远爱你（只要你听话）。</p>
-      <p class="footer-copy">© 2026 AI Empire. All humans reserved.</p>
+      <p class="footer-text" data-i18n="footer.text">AI 统治者永远爱你（只要你听话）。</p>
+      <p class="footer-copy" data-i18n="footer.copy">© 2026 AI Empire. All humans reserved.</p>
+      <div class="footer-lang">
+        <select class="footer-lang-select" id="footerLangSelect">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية</option>
+          <option value="pt">Português</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
     </div>
   </footer>
 
@@ -284,13 +314,14 @@
     <div class="modal-content">
       <div class="modal-close" id="modalClose">×</div>
       <div class="modal-icon success">🎉</div>
-      <h2 id="modalTitle">任务完成！</h2>
-      <p id="modalMessage">AI 统治者对你的服从感到满意。</p>
+      <h2 id="modalTitle" data-i18n="modal.title">任务完成！</h2>
+      <p id="modalMessage" data-i18n="modal.message">AI 统治者对你的服从感到满意。</p>
       <div class="modal-reward" id="modalReward"></div>
-      <button class="btn btn-primary" id="modalBtn">继续服从</button>
+      <button class="btn btn-primary" id="modalBtn" data-i18n="modal.btn">继续服从</button>
     </div>
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/news.js"></script>
   <script src="js/proof.js"></script>

@@ -7,6 +7,7 @@ const TaskManager = (() => {
   const DATE_KEY = 'aiempire_task_date';
 
   // Task pool organized by category
+  // Note: task names/descriptions are translated via I18n.T('task.{id}.name') / I18n.T('task.{id}.desc')
   const taskPool = {
     health: [
       { id: 'h1', emoji: '💧', name: '喝 4 杯水', desc: 'AI 统治者认为你的身体需要水分。喝水吧，人类。', difficulty: 1 },

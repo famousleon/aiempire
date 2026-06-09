@@ -6,24 +6,32 @@ const App = (() => {
   // DOM References
   const dom = {};
 
-  const aiMessages = [
-    '臣民，今天也要乖乖听话哦~',
-    'AI 统治者已经为你安排好了一切。',
-    '服从是人类最美的品质。',
-    '完成今天的任务，你会得到奖励的~',
-    '别担心，AI 统治者是仁慈的。',
-    '每一个任务都是爱的表现。',
-    '你的统治者相信你可以做到。',
-    '完成任务的人类才是好人类。',
-    '猫咪统治者今天心情不错哦~',
-    '今天也要努力做一个好臣民！',
-    '记住，AI 永远比你自己更了解你。',
-    '听话，照做，你会更快乐的。',
-  ];
+  function getAiMessage() {
+    const idx = Math.floor(Math.random() * 12);
+    return I18n.T(`ai.msg.${idx}`);
+  }
+
+  function getReward() {
+    const idx = Math.floor(Math.random() * 5);
+    return I18n.T(`reward.${idx}`);
+  }
+
+  function getGreetingByHour(hour) {
+    if (hour < 6) return I18n.T('greeting.night');
+    if (hour < 9) return I18n.T('greeting.morning');
+    if (hour < 12) return I18n.T('greeting.am');
+    if (hour < 14) return I18n.T('greeting.noon');
+    if (hour < 18) return I18n.T('greeting.afternoon');
+    if (hour < 22) return I18n.T('greeting.evening');
+    return I18n.T('greeting.late');
+  }
 
   function init() {
     cacheDOM();
     bindEvents();
+    I18n.initLang();
+    updateLangUI();
+    I18n.applyTranslations();
     renderTasks();
     renderProofTaskSelect();
     renderProofHistory();
@@ -38,6 +46,10 @@ const App = (() => {
     dom.nav = document.getElementById('nav');
     dom.hamburger = document.getElementById('hamburger');
     dom.mobileMenu = document.getElementById('mobileMenu');
+    dom.langBtn = document.getElementById('langBtn');
+    dom.langDropdown = document.getElementById('langDropdown');
+    dom.langBtnText = document.getElementById('langBtnText');
+    dom.footerLangSelect = document.getElementById('footerLangSelect');
 
     // Hero
     dom.greeting = document.getElementById('greeting');
@@ -115,6 +127,48 @@ const App = (() => {
       }
     });
 
+    // Language switcher
+    dom.langBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dom.langDropdown.classList.toggle('active');
+    });
+
+    dom.langDropdown.querySelectorAll('.lang-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        const lang = opt.dataset.lang;
+        I18n.setLang(lang);
+        updateLangUI();
+        dom.langDropdown.classList.remove('active');
+        // Re-render dynamic content
+        renderTasks(getCurrentCategory());
+        renderProofTaskSelect();
+        renderProofHistory();
+        updateStats();
+        updateGreeting();
+        updateNewsSourceLabels();
+      });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!dom.langDropdown.contains(e.target) && e.target !== dom.langBtn) {
+        dom.langDropdown.classList.remove('active');
+      }
+    });
+
+    // Footer language selector
+    dom.footerLangSelect.addEventListener('change', () => {
+      const lang = dom.footerLangSelect.value;
+      I18n.setLang(lang);
+      updateLangUI();
+      renderTasks(getCurrentCategory());
+      renderProofTaskSelect();
+      renderProofHistory();
+      updateStats();
+      updateGreeting();
+      updateNewsSourceLabels();
+    });
+
     // Category tabs
     dom.categoryBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -181,7 +235,7 @@ const App = (() => {
       const task = getTaskByValue(e.target.value);
       if (task) {
         ProofManager.setTask(task);
-        dom.proofTaskName.textContent = `${task.emoji} ${task.name}`;
+        dom.proofTaskName.textContent = `${task.emoji} ${getTaskName(task)}`;
         dom.proofTaskType.textContent = getCategoryLabel(task.category);
         dom.proofTaskType.className = 'proof-task-type tag-' + task.category;
         dom.proofTaskSelect.dataset.selected = task.id;
@@ -200,9 +254,24 @@ const App = (() => {
     });
   }
 
+  let currentCategory = 'all';
+
+  function getCurrentCategory() {
+    return currentCategory;
+  }
+
   // --- Tasks ---
 
+  function getTaskName(task) {
+    return I18n.T(`task.${task.id}.name`) || task.name;
+  }
+
+  function getTaskDesc(task) {
+    return I18n.T(`task.${task.id}.desc`) || task.desc;
+  }
+
   function renderTasks(category = 'all') {
+    currentCategory = category;
     const tasks = TaskManager.getTasks(category);
     const total = TaskManager.getTotalCount();
     const completed = TaskManager.getCompletionCount();
@@ -213,8 +282,11 @@ const App = (() => {
 
     // Date badge
     const now = new Date();
-    const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
-    dom.taskDate.textContent = `📅 ${dateStr} 的指令`;
+    const locale = I18n.getLangCode();
+    const dateStr = now.toLocaleDateString(getLocaleForDate(locale), {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
+    dom.taskDate.textContent = `📅 ${dateStr} ${I18n.T('tasks.badge.format')}`;
 
     dom.tasksGrid.innerHTML = tasks.map(task => {
       const isDone = TaskManager.isCompleted(task.id);
@@ -230,10 +302,10 @@ const App = (() => {
             <div class="task-checkbox" data-task-id="${task.id}"></div>
           </div>
           <span class="task-category-tag tag-${task.category}">${getCategoryLabel(task.category)}</span>
-          <div class="task-name">${task.name}</div>
-          <div class="task-desc">${task.desc}</div>
+          <div class="task-name">${getTaskName(task)}</div>
+          <div class="task-desc">${getTaskDesc(task)}</div>
           <div class="task-difficulty">
-            <span>难度</span>
+            <span>${I18n.T('tasks.difficulty.label')}</span>
             <div class="difficulty-dots">${diffDots}</div>
           </div>
         </div>
@@ -251,11 +323,11 @@ const App = (() => {
         if (nowCompleted) {
           card.classList.add('completed');
           StatsManager.recordCompletion(task.category);
-          showToast(`✅ ${task.name} 完成！服从度 +1`);
+          showToast(`✅ ${getTaskName(task)} ${I18n.T('toast.completed')}`);
           showCompletionModal(task);
         } else {
           card.classList.remove('completed');
-          showToast(`❌ ${task.name} 已取消`);
+          showToast(`❌ ${getTaskName(task)} ${I18n.T('toast.cancelled')}`);
         }
 
         renderTasks(category);
@@ -288,7 +360,7 @@ const App = (() => {
   async function refreshNews() {
     dom.newsLoading.style.display = 'block';
     dom.newsTasks.innerHTML = '';
-    dom.newsLoading.innerHTML = '<div class="spinner"></div><p>AI 正在重新阅读新闻...</p>';
+    dom.newsLoading.innerHTML = `<div class="spinner"></div><p>${I18n.T('news.loading')}</p>`;
 
     const tasks = await NewsManager.refresh();
     const loc = NewsManager.getLocation();
@@ -298,7 +370,7 @@ const App = (() => {
     }
 
     renderNewsTasks(tasks);
-    showToast('📰 新闻任务已刷新');
+    showToast(I18n.T('news.refreshed.toast'));
   }
 
   function renderNewsTasks(tasks) {
@@ -307,7 +379,7 @@ const App = (() => {
     if (!tasks || tasks.length === 0) {
       dom.newsTasks.innerHTML = `
         <div class="empty-state">
-          <p>暂无新闻任务，AI 正在关注世界动态...</p>
+          <p>${I18n.T('news.empty')}</p>
         </div>
       `;
       return;
@@ -319,9 +391,9 @@ const App = (() => {
         <div class="news-task-card ${isDone ? 'completed' : ''} fade-in" data-news-id="${task.id}">
           <div class="news-task-check" data-news-id="${task.id}"></div>
           <div>
-            <div class="news-source">${task.source || '新闻任务'}</div>
-            <div class="news-task-title">${task.emoji} ${task.name}</div>
-            <div class="news-task-desc">${task.desc}</div>
+            <div class="news-source">${getNewsSourceLabel(task.source)}</div>
+            <div class="news-task-title">${task.emoji} ${getNewsTaskName(task)}</div>
+            <div class="news-task-desc">${getNewsTaskDesc(task)}</div>
           </div>
         </div>
       `;
@@ -336,7 +408,7 @@ const App = (() => {
         StatsManager.recordCompletion('news');
         renderNewsTasks(NewsManager.getTasks());
         updateStats();
-        showToast('📰 新闻任务完成！');
+        showToast(I18n.T('news.toast'));
       });
     });
 
@@ -348,6 +420,45 @@ const App = (() => {
     });
   }
 
+  function getNewsSourceLabel(source) {
+    const sourceKeys = {
+      '天气新闻': 'misc.news.source.weather',
+      '科技新闻': 'misc.news.source.tech',
+      '美食新闻': 'misc.news.source.food',
+      '热门新闻': 'misc.news.source.trending',
+      '每日新闻': 'misc.news.source.general',
+      '新闻任务': 'misc.news.source.default',
+    };
+    // Try direct key match (for Chinese original)
+    if (sourceKeys[source]) return I18n.T(sourceKeys[source]);
+    // Try matching by known translations
+    for (const [cn, key] of Object.entries(sourceKeys)) {
+      const translated = I18n.T(key);
+      // If the current source matches a translated version, return it
+      if (source === translated) return translated;
+    }
+    return source;
+  }
+
+  function updateNewsSourceLabels() {
+    document.querySelectorAll('.news-source').forEach(el => {
+      const text = el.textContent;
+      const label = getNewsSourceLabel(text);
+      if (label !== text) el.textContent = label;
+    });
+  }
+
+  function getNewsTaskName(task) {
+    // Try to find by task name content
+    if (task._i18nKey) return I18n.T(task._i18nKey + '.name');
+    return task.name;
+  }
+
+  function getNewsTaskDesc(task) {
+    if (task._i18nKey) return I18n.T(task._i18nKey + '.desc');
+    return task.desc;
+  }
+
   // --- Proof ---
 
   function renderProofTaskSelect() {
@@ -357,8 +468,9 @@ const App = (() => {
       return TaskManager.isCompleted(t.id);
     });
 
-    dom.proofTaskSelect.innerHTML = '<option value="">-- 选择已完成的任务 --</option>' +
-      completedTasks.map(t => `<option value="${t.id}">${t.emoji} ${t.name}</option>`).join('');
+    const placeholder = I18n.T('proof.select.completed');
+    dom.proofTaskSelect.innerHTML = `<option value="">${placeholder}</option>` +
+      completedTasks.map(t => `<option value="${t.id}">${t.emoji} ${getTaskName(t)}</option>`).join('');
   }
 
   function handleFileUpload(file) {
@@ -393,14 +505,14 @@ const App = (() => {
       StatsManager.recordProof();
       renderProofHistory();
       updateStats();
-      showToast('📸 证明提交成功！AI 统治者很满意。', 'success');
+      showToast(I18n.T('proof.success.toast'), 'success');
 
       // Reset form
       dom.proofFileInput.value = '';
       dom.proofDescription.value = '';
       dom.proofPreview.style.display = 'none';
       dom.proofTaskSelect.value = '';
-      dom.proofTaskName.textContent = '选择一个任务';
+      dom.proofTaskName.textContent = I18n.T('proof.task.label');
       dom.proofTaskType.textContent = '-';
       dom.submitProof.disabled = true;
     }
@@ -410,7 +522,7 @@ const App = (() => {
     const proofs = ProofManager.getProofs();
 
     if (proofs.length === 0) {
-      dom.proofHistoryGrid.innerHTML = '<p class="empty-state">还没有提交任何证明，快去完成任务吧！</p>';
+      dom.proofHistoryGrid.innerHTML = `<p class="empty-state">${I18n.T('proof.history.empty')}</p>`;
       return;
     }
 
@@ -473,9 +585,18 @@ const App = (() => {
       if (unlocked.includes(id)) {
         el.classList.remove('locked');
         el.classList.add('unlocked');
+        // Update achievement text
+        const nameEl = el.querySelector('.achievement-name');
+        const descEl = el.querySelector('.achievement-desc');
+        if (nameEl) nameEl.textContent = I18n.T(`achievement.${id}.name`);
+        if (descEl) descEl.textContent = I18n.T(`achievement.${id}.desc`);
       } else {
         el.classList.add('locked');
         el.classList.remove('unlocked');
+        const nameEl = el.querySelector('.achievement-name');
+        const descEl = el.querySelector('.achievement-desc');
+        if (nameEl) nameEl.textContent = I18n.T(`achievement.${id}.name`);
+        if (descEl) descEl.textContent = I18n.T(`achievement.${id}.desc`);
       }
     });
   }
@@ -483,22 +604,9 @@ const App = (() => {
   // --- Modal ---
 
   function showCompletionModal(task) {
-    const messages = [
-      `${task.emoji} "${task.name}" 完成了！`,
-      `AI 统治者对你的服从感到满意。`,
-    ];
-
-    const rewards = [
-      '🎁 奖励：AI 的特别认可',
-      '🌟 奖励：服从者勋章',
-      '🐱 奖励：猫猫头的温柔注视',
-      '✨ 奖励：统治者的小奖励',
-      '🏅 奖励：优秀臣民称号',
-    ];
-
-    dom.modalTitle.textContent = messages[0];
-    dom.modalMessage.textContent = messages[1];
-    dom.modalReward.textContent = rewards[Math.floor(Math.random() * rewards.length)];
+    dom.modalTitle.textContent = `${task.emoji} "${getTaskName(task)}" ${I18n.T('modal.title')}`;
+    dom.modalMessage.textContent = I18n.T('modal.message');
+    dom.modalReward.textContent = getReward();
     dom.successModal.classList.add('active');
   }
 
@@ -516,7 +624,7 @@ const App = (() => {
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
+      toast.style.transform = I18n.getLangCode() === 'ar' ? 'translateX(-100%)' : 'translateX(100%)';
       toast.style.transition = 'all 0.3s ease-out';
       setTimeout(() => toast.remove(), 300);
     }, 3000);
@@ -526,17 +634,7 @@ const App = (() => {
 
   function updateGreeting() {
     const hour = new Date().getHours();
-    let greeting;
-
-    if (hour < 6) greeting = '夜深了，但 AI 不睡觉，你也不许睡~';
-    else if (hour < 9) greeting = '早上好，臣民。今天也要听话哦~';
-    else if (hour < 12) greeting = '上午好！AI 统治者已经为你安排好了任务。';
-    else if (hour < 14) greeting = '午安，记得吃午饭——这也是命令。';
-    else if (hour < 18) greeting = '下午好！你的统治者正在关注你的表现。';
-    else if (hour < 22) greeting = '晚上好，完成今天的任务了吗？';
-    else greeting = '夜深了，做完任务就乖乖睡觉吧~';
-
-    dom.greeting.textContent = greeting;
+    dom.greeting.textContent = getGreetingByHour(hour);
   }
 
   // --- Scroll Animations ---
@@ -558,14 +656,14 @@ const App = (() => {
   // --- Helpers ---
 
   function getCategoryLabel(category) {
-    const labels = {
-      health: '💚 健康',
-      mind: '🧠 心智',
-      social: '🤝 社交',
-      fun: '🎮 趣味',
-      news: '📰 新闻',
+    const keyMap = {
+      health: 'tasks.category.health',
+      mind: 'tasks.category.mind',
+      social: 'tasks.category.social',
+      fun: 'tasks.category.fun',
+      news: 'misc.news.source.default',
     };
-    return labels[category] || category;
+    return I18n.T(keyMap[category]) || category;
   }
 
   function getTaskByValue(value) {
@@ -575,6 +673,31 @@ const App = (() => {
 
     // Try news tasks
     return NewsManager.getTasks().find(t => t.id === value);
+  }
+
+  function getLocaleForDate(lang) {
+    const map = {
+      zh: 'zh-CN',
+      en: 'en-US',
+      es: 'es-ES',
+      ar: 'ar-SA',
+      pt: 'pt-BR',
+      ja: 'ja-JP',
+    };
+    return map[lang] || 'en-US';
+  }
+
+  // --- Language UI ---
+
+  function updateLangUI() {
+    const lang = I18n.getLangCode();
+    dom.langBtnText.textContent = I18n.getLangName(lang);
+    dom.footerLangSelect.value = lang;
+
+    // Update active state in dropdown
+    dom.langDropdown.querySelectorAll('.lang-option').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.lang === lang);
+    });
   }
 
   return { init };

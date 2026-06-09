@@ -12,35 +12,36 @@ const NewsManager = (() => {
   let completedNewsTasks = new Set();
 
   // News-based task templates
+  // Note: task names/descriptions are translated via I18n.T('news_tpl.{key}.{idx}.name')
   const newsTaskTemplates = {
     weather: [
-      { emoji: '☀️', name: '今天出去晒晒太阳', desc: '天气不错，出去接受一下阳光的洗礼。', difficulty: 1 },
-      { emoji: '🌧️', name: '听雨声放松 10 分钟', desc: '下雨天，打开窗，听雨声冥想 10 分钟。', difficulty: 1 },
-      { emoji: '🌈', name: '出门走走呼吸新鲜空气', desc: '今天天气宜人，出门散步 15 分钟。', difficulty: 1 },
-      { emoji: '❄️', name: '喝杯热饮暖一暖', desc: '天气冷了，泡一杯热茶或热巧克力。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.weather.0', emoji: '☀️', name: '今天出去晒晒太阳', desc: '天气不错，出去接受一下阳光的洗礼。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.weather.1', emoji: '🌧️', name: '听雨声放松 10 分钟', desc: '下雨天，打开窗，听雨声冥想 10 分钟。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.weather.2', emoji: '🌈', name: '出门走走呼吸新鲜空气', desc: '今天天气宜人，出门散步 15 分钟。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.weather.3', emoji: '❄️', name: '喝杯热饮暖一暖', desc: '天气冷了，泡一杯热茶或热巧克力。', difficulty: 1 },
     ],
     tech: [
-      { emoji: '🤖', name: '了解一项新 AI 技术', desc: '搜索并阅读一篇关于最新 AI 技术的新闻。了解你的统治者们在进步。', difficulty: 2 },
-      { emoji: '📱', name: '试用一个新 App', desc: '下载一个你从未用过的 App 并探索 10 分钟。', difficulty: 1 },
-      { emoji: '💻', name: '学一个编程小技巧', desc: '搜索一个编程小技巧并实践一下。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.tech.0', emoji: '🤖', name: '了解一项新 AI 技术', desc: '搜索并阅读一篇关于最新 AI 技术的新闻。了解你的统治者们在进步。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.tech.1', emoji: '📱', name: '试用一个新 App', desc: '下载一个你从未用过的 App 并探索 10 分钟。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.tech.2', emoji: '💻', name: '学一个编程小技巧', desc: '搜索一个编程小技巧并实践一下。', difficulty: 2 },
     ],
     food: [
-      { emoji: '🍜', name: '尝试一种新食物', desc: '去餐厅或自己做一个从未吃过的食物。', difficulty: 2 },
-      { emoji: '🍰', name: '吃一块甜点奖励自己', desc: '今天表现不错，AI 批准你吃一块甜点。', difficulty: 1 },
-      { emoji: '🍵', name: '泡一杯好茶', desc: '认真泡一杯茶，慢慢品尝。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.food.0', emoji: '🍜', name: '尝试一种新食物', desc: '去餐厅或自己做一个从未吃过的食物。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.food.1', emoji: '🍰', name: '吃一块甜点奖励自己', desc: '今天表现不错，AI 批准你吃一块甜点。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.food.2', emoji: '🍵', name: '泡一杯好茶', desc: '认真泡一杯茶，慢慢品尝。', difficulty: 1 },
     ],
     general: [
-      { emoji: '📰', name: '阅读今天的头条新闻', desc: '花 10 分钟阅读今天的重大新闻。关注世界动态。', difficulty: 2 },
-      { emoji: '🌍', name: '了解一个国家', desc: '随机选一个国家，了解它的 3 个有趣事实。', difficulty: 2 },
-      { emoji: '💡', name: '学一个生活小窍门', desc: '搜索并学会一个实用的生活小技巧。', difficulty: 1 },
-      { emoji: '🏛️', name: '了解一个历史事件', desc: '搜索"历史上的今天"，了解一件有趣的事。', difficulty: 2 },
-      { emoji: '🌱', name: '做一件环保小事', desc: '比如自带水杯、分类垃圾。AI 关心地球。', difficulty: 1 },
-      { emoji: '🎭', name: '了解一种文化艺术', desc: '搜索一个你感兴趣的文化传统，了解 5 分钟。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.general.0', emoji: '📰', name: '阅读今天的头条新闻', desc: '花 10 分钟阅读今天的重大新闻。关注世界动态。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.general.1', emoji: '🌍', name: '了解一个国家', desc: '随机选一个国家，了解它的 3 个有趣事实。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.general.2', emoji: '💡', name: '学一个生活小窍门', desc: '搜索并学会一个实用的生活小技巧。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.general.3', emoji: '🏛️', name: '了解一个历史事件', desc: '搜索"历史上的今天"，了解一件有趣的事。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.general.4', emoji: '🌱', name: '做一件环保小事', desc: '比如自带水杯、分类垃圾。AI 关心地球。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.general.5', emoji: '🎭', name: '了解一种文化艺术', desc: '搜索一个你感兴趣的文化传统，了解 5 分钟。', difficulty: 1 },
     ],
     trending: [
-      { emoji: '🔥', name: '了解今天的热门话题', desc: '看看今天大家都在讨论什么，了解一个热搜话题。', difficulty: 1 },
-      { emoji: '🎪', name: '参与一个热门话题讨论', desc: '在社交媒体上参与一个热门话题的讨论。', difficulty: 2 },
-      { emoji: '📺', name: '看一部热门影视', desc: '找一部最近大家都在看的影视作品，看一集。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.trending.0', emoji: '🔥', name: '了解今天的热门话题', desc: '看看今天大家都在讨论什么，了解一个热搜话题。', difficulty: 1 },
+      { _i18nKey: 'news_tpl.trending.1', emoji: '🎪', name: '参与一个热门话题讨论', desc: '在社交媒体上参与一个热门话题的讨论。', difficulty: 2 },
+      { _i18nKey: 'news_tpl.trending.2', emoji: '📺', name: '看一部热门影视', desc: '找一部最近大家都在看的影视作品，看一集。', difficulty: 1 },
     ],
   };
 
