@@ -4,6 +4,10 @@
 
 const ProofManager = (() => {
   const STORAGE_KEY = 'aiempire_proofs';
+  const MAX_PROOFS = 10; // Max proofs to store (localStorage ~5-10MB limit)
+  const RESIZE_MAX = 200; // Max width/height for thumbnails
+  const RESIZE_QUALITY = 0.5; // JPEG quality (0.5 = ~50% of original quality)
+  const MAX_SINGLE_SIZE = 200000; // ~200KB per image after resize
 
   let proofs = [];
   let selectedTask = null;
@@ -81,22 +85,25 @@ const ProofManager = (() => {
   function save() {
     try {
       // Limit stored proofs to avoid localStorage overflow
-      const limitedProofs = proofs.slice(0, 20).map(p => ({
-        ...p,
-        // Resize image for storage
-        image: p.image.length > 500000 ? resizeImage(p.image) : p.image,
-      }));
+      const limitedProofs = proofs.slice(0, MAX_PROOFS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(limitedProofs));
     } catch (e) {
-      // If storage is full, remove oldest proofs
-      if (proofs.length > 5) {
-        proofs = proofs.slice(0, 5);
-        save();
+      // If storage is full, remove oldest proofs until it fits
+      while (proofs.length > 3) {
+        proofs.pop(); // Remove oldest
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(proofs.slice(0, 3)));
+          return;
+        } catch (e2) {
+          // Still too full, keep removing
+        }
       }
+      // If even 3 won't fit, localStorage is critically full
+      console.warn('localStorage critically full, proofs not saved');
     }
   }
 
-  function resizeImage(dataUrl, maxWidth = 400) {
+  function resizeImage(dataUrl, maxWidth = RESIZE_MAX, quality = RESIZE_QUALITY) {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
@@ -106,8 +113,9 @@ const ProofManager = (() => {
         canvas.height = img.height * scale;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
+      img.onerror = () => resolve(dataUrl); // Fallback: return original
       img.src = dataUrl;
     });
   }
