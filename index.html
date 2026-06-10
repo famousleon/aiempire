@@ -18,6 +18,7 @@
       <ul class="nav-links">
         <li><a href="#tasks" data-i18n="nav.tasks">今日任务</a></li>
         <li><a href="#news" data-i18n="nav.news">新闻任务</a></li>
+        <li><a href="#market" data-i18n="nav.market">任务市场</a></li>
         <li><a href="#proof" data-i18n="nav.proof">提交证明</a></li>
         <li><a href="#stats" data-i18n="nav.stats">人类服从度</a></li>
       </ul>
@@ -51,6 +52,7 @@
   <div class="mobile-menu" id="mobileMenu">
     <a href="#tasks" data-i18n="nav.tasks">今日任务</a>
     <a href="#news" data-i18n="nav.news">新闻任务</a>
+    <a href="#market" data-i18n="nav.market">任务市场</a>
     <a href="#proof" data-i18n="nav.proof">提交证明</a>
     <a href="#stats" data-i18n="nav.stats">人类服从度</a>
   </div>
@@ -102,6 +104,53 @@
           <div class="progress-fill" id="progressFill"></div>
         </div>
         <p class="progress-text"><span id="progressCount">0</span> / <span id="progressTotal">0</span> <span data-i18n="tasks.progress.text">任务已完成</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Task Marketplace Section -->
+  <section class="section market-section" id="market">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="market.title">任务市场</h2>
+        <p class="section-desc" data-i18n="market.desc">发布任务获取帮助，或完成他人的任务赚取奖励。</p>
+        <div class="market-auth-bar">
+          <button class="btn btn-sm btn-primary" id="marketLoginBtn" onclick="Market.openAuthModal()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM3 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span data-i18n="market.login">登录 / 注册</span>
+          </button>
+          <div class="market-user-badge" id="marketUserBadge">
+            <span class="user-name"></span>
+            <button class="btn-market-logout" onclick="Market.handleSignOut()" data-i18n="market.logout">退出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="market-categories">
+        <button class="category-btn active" data-market-cat="all" onclick="Market.filterByCategory('all')" data-i18n="market.category.all">全部</button>
+        <button class="category-btn" data-market-cat="errand" onclick="Market.filterByCategory('errand')" data-i18n="market.category.errand">🏃 跑腿</button>
+        <button class="category-btn" data-market-cat="skill" onclick="Market.filterByCategory('skill')" data-i18n="market.category.skill">🎯 技能</button>
+        <button class="category-btn" data-market-cat="creative" onclick="Market.filterByCategory('creative')" data-i18n="market.category.creative">🎨 创意</button>
+        <button class="category-btn" data-market-cat="advice" onclick="Market.filterByCategory('advice')" data-i18n="market.category.advice">💡 咨询</button>
+        <button class="category-btn" data-market-cat="other" onclick="Market.filterByCategory('other')" data-i18n="market.category.other">📦 其他</button>
+      </div>
+
+      <div class="market-actions">
+        <button class="btn btn-primary btn-create-task" onclick="Market.createTask()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-i18n="market.create.btn">发布任务</span>
+        </button>
+      </div>
+
+      <div class="market-tasks-grid" id="marketTasksGrid">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p data-i18n="market.loading">正在加载任务市场...</p>
+        </div>
       </div>
     </div>
   </section>
@@ -309,6 +358,123 @@
   <!-- Toast notifications -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Market Auth Modal -->
+  <div class="modal" id="marketAuthModal">
+    <div class="modal-content">
+      <div class="modal-close" onclick="document.getElementById('marketAuthModal').classList.remove('active')">×</div>
+      <h2 data-i18n="market.auth.title">加入任务市场</h2>
+
+      <!-- Login Form -->
+      <div id="marketLoginForm">
+        <p class="modal-subtitle" data-i18n="market.auth.login.subtitle">登录以发布任务或赚取奖励</p>
+        <div class="form-group">
+          <input type="email" id="marketEmail" placeholder="Email" class="form-input" data-i18n-placeholder="market.auth.email" placeholder="邮箱地址">
+        </div>
+        <div class="form-group">
+          <input type="password" id="marketPassword" placeholder="密码" class="form-input" data-i18n-placeholder="market.auth.password" placeholder="密码">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="Market.handleLogin()" data-i18n="market.auth.login.btn">登录</button>
+        <p class="form-switch">
+          <span data-i18n="market.auth.no.account">还没有账号？</span>
+          <a href="#" onclick="Market.openAuthModal('signup')" data-i18n="market.auth.signup">立即注册</a>
+        </p>
+      </div>
+
+      <!-- Signup Form -->
+      <div id="marketSignupForm" style="display:none;">
+        <p class="modal-subtitle" data-i18n="market.auth.signup.subtitle">创建账号开始发布任务</p>
+        <div class="form-group">
+          <input type="email" id="marketSignupEmail" placeholder="邮箱地址" class="form-input" data-i18n-placeholder="market.auth.email" placeholder="邮箱地址">
+        </div>
+        <div class="form-group">
+          <input type="text" id="marketSignupUsername" placeholder="用户名" class="form-input" data-i18n-placeholder="market.auth.username" placeholder="用户名">
+        </div>
+        <div class="form-group">
+          <input type="password" id="marketSignupPassword" placeholder="密码（至少6位）" class="form-input" data-i18n-placeholder="market.auth.password.req" placeholder="密码（至少6位）">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="Market.handleSignup()" data-i18n="market.auth.signup.btn">注册</button>
+        <p class="form-switch">
+          <span data-i18n="market.auth.has.account">已有账号？</span>
+          <a href="#" onclick="Market.openAuthModal('login')" data-i18n="market.auth.login">登录</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Create Task Modal -->
+  <div class="modal" id="marketCreateModal">
+    <div class="modal-content modal-lg">
+      <div class="modal-close" onclick="document.getElementById('marketCreateModal').classList.remove('active')">×</div>
+      <h2 data-i18n="market.create.modal.title">发布新任务</h2>
+      <p class="modal-subtitle" data-i18n="market.create.modal.desc">描述你需要别人帮你做什么，设置奖励金额</p>
+
+      <div class="form-group">
+        <label data-i18n="market.create.title.label">任务标题</label>
+        <input type="text" id="marketCreateTitle" class="form-input" data-i18n-placeholder="market.create.title.placeholder" placeholder="简短描述你需要什么帮助">
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="market.create.desc.label">详细描述</label>
+        <textarea id="marketCreateDesc" class="form-input form-textarea" rows="4" data-i18n-placeholder="market.create.desc.placeholder" placeholder="详细描述任务要求、时间、地点等"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="market.create.reward.label">奖励金额 (USD)</label>
+          <input type="number" id="marketCreateReward" class="form-input" placeholder="10" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label data-i18n="market.create.category.label">任务类型</label>
+          <select id="marketCreateCategory" class="form-input">
+            <option value="errand" data-i18n="market.category.errand">🏃 跑腿</option>
+            <option value="skill" data-i18n="market.category.skill">🎯 技能</option>
+            <option value="creative" data-i18n="market.category.creative">🎨 创意</option>
+            <option value="advice" data-i18n="market.category.advice">💡 咨询</option>
+            <option value="other" data-i18n="market.category.other">📦 其他</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="Market.submitCreateTask()" data-i18n="market.create.submit">发布并支付</button>
+    </div>
+  </div>
+
+  <!-- Market Submit Completion Modal -->
+  <div class="modal" id="marketSubmitModal">
+    <div class="modal-content">
+      <div class="modal-close" onclick="document.getElementById('marketSubmitModal').classList.remove('active')">×</div>
+      <h2 data-i18n="market.submit.modal.title">提交完成证明</h2>
+
+      <h3 id="marketSubmitTaskTitle" class="market-submit-title"></h3>
+      <p id="marketSubmitReward" class="market-submit-reward"></p>
+
+      <input type="hidden" id="marketSubmitTaskId">
+
+      <div class="form-group">
+        <label data-i18n="market.submit.desc.label">描述你是如何完成的</label>
+        <textarea id="marketSubmitDesc" class="form-input form-textarea" rows="3" data-i18n-placeholder="market.submit.desc.placeholder" placeholder="描述你完成的过程..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="market.submit.proof.label">上传证明（可选）</label>
+        <input type="file" id="marketSubmitImage" accept="image/*" class="form-input">
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="Market.submitCompletion()" data-i18n="market.submit.btn">提交</button>
+    </div>
+  </div>
+
+  <!-- Market Submissions Modal (for task creators) -->
+  <div class="modal" id="marketSubmissionsModal">
+    <div class="modal-content modal-lg">
+      <div class="modal-close" onclick="document.getElementById('marketSubmissionsModal').classList.remove('active')">×</div>
+      <h2 data-i18n="market.submissions.title">收到的提交</h2>
+      <p class="modal-subtitle" data-i18n="market.submissions.desc">审核并提交者同意后发放奖励</p>
+      <div class="market-submissions-grid" id="marketSubmissionsGrid">
+      </div>
+    </div>
+  </div>
+
   <!-- Success Modal -->
   <div class="modal" id="successModal">
     <div class="modal-content">
@@ -321,6 +487,10 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/payment.js"></script>
+  <script src="js/market.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/news.js"></script>

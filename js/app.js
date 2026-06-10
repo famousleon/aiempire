@@ -39,6 +39,7 @@ const App = (() => {
     updateGreeting();
     initNews();
     initScrollAnimations();
+    Market.init();
   }
 
   function cacheDOM() {
