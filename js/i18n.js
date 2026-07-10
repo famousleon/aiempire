@@ -383,6 +383,31 @@ const I18n = (() => {
     'reward.3': { zh: '✨ 奖励：统治者的小奖励', en: '✨ Reward: Ruler\'s Little Gift', es: '✨ Recompensa: Pequeño Regalo del Gobernante', ar: '✨ مكافأة: هدية صغيرة من الحاكم', pt: '✨ Recompresa: Pequeno Presente do Governante', ja: '✨ ご褒美：支配者のプチギフト' },
     'reward.4': { zh: '🏅 奖励：优秀臣民称号', en: '🏅 Reward: Excellent Subject Title', es: '🏅 Recompensa: Título de Súbdito Excelente', ar: '🏅 مكافأة: لقب الرعية الممتازة', pt: '🏅 Recompensa: Título de Súdito Excelente', ja: '🏅 ご褒美：優秀な臣民の称号' },
 
+    // ===== BASIC ENGLISH 850 =====
+    'basic850.title': {
+      zh: '📝 每日一学', en: '📝 Daily Learning', es: '📝 Aprendizaje Diario', ar: '📝 التعلم اليومي', pt: '📝 Aprendizado Diário', ja: '📝 毎日の学習',
+    },
+    'basic850.desc': {
+      zh: '每天一句只用 850 个基础英语词的句子。一次学一句，轻松掌握多个单词。',
+      en: 'One sentence a day using only 850 Basic English words. Learn one sentence, master multiple words.',
+      es: 'Una oración al día usando solo 850 palabras básicas. Aprende una oración, domina varias palabras.',
+      ar: 'جملة واحدة يومياً باستخدام 850 كلمة إنجليزية أساسية فقط. تعلم جملة واحدة، أتقن كلمات متعددة.',
+      pt: 'Uma frase por dia usando apenas 850 palavras básicas. Aprenda uma frase, domine várias palavras.',
+      ja: '850の基本英語のみを使った毎日の一文。一文を学んで、複数の単語をマスター。',
+    },
+    'basic850.reveal': {
+      zh: '👆 点击查看翻译', en: '👆 Click to Reveal Translation', es: '👆 Clic para Ver Traducción', ar: '👆 انقر لرؤية الترجمة', pt: '👆 Clique para Ver Tradução', ja: '👆 クリックして翻訳を表示',
+    },
+    'basic850.hide': {
+      zh: '👆 点击隐藏翻译', en: '👆 Click to Hide Translation', es: '👆 Clic para Ocultar Traducción', ar: '👆 انقر لإخفاء الترجمة', pt: '👆 Clique para Ocultar Tradução', ja: '👆 クリックして翻訳を非表示',
+    },
+    'basic850.prev': {
+      zh: '上一句', en: 'Previous', es: 'Anterior', ar: 'السابق', pt: 'Anterior', ja: '前へ',
+    },
+    'basic850.next': {
+      zh: '下一句', en: 'Next', es: 'Siguiente', ar: 'التالي', pt: 'Próximo', ja: '次へ',
+    },
+
     // ===== MISC =====
     'misc.locating': {
       zh: '正在定位...', en: 'Locating...', es: 'Localizando...', ar: 'جارٍ تحديد الموقع...', pt: 'Localizando...', ja: '位置情報取得中...',
@@ -532,6 +557,7 @@ const I18n = (() => {
 
     // ===== MARKETPLACE =====
     'nav.market': { zh: '任务市场', en: 'Marketplace', es: 'Mercado', ar: 'السوق', pt: 'Mercado', ja: 'マーケット' },
+    'nav.basic850': { zh: '每日一学', en: 'Daily Learn', es: 'Aprender Diario', ar: 'تعلم يومي', pt: 'Aprender Diário', ja: '毎日の学習' },
     'market.title': { zh: '任务市场', en: 'Task Marketplace', es: 'Mercado de Tareas', ar: 'سوق المهام', pt: 'Mercado de Tarefas', ja: 'タスクマーケット' },
     'market.desc': { zh: '发布任务获取帮助，或完成他人的任务赚取奖励。', en: 'Post tasks to get help, or complete others\' tasks to earn rewards.', es: 'Publica tareas para obtener ayuda, o completa tareas de otros para ganar recompensas.', ar: 'انشر مهاماً للحصول على المساعدة، أو أنجز مهام الآخرين لكسب المكافآت.', pt: 'Publique tarefas para obter ajuda, ou complete tarefas de outros para ganhar recompensas.', ja: 'タスクを投稿してヘルプを得るか、他の人のタスクを完了して報酬を獲得。' },
     'market.loading': { zh: '正在加载任务市场...', en: 'Loading marketplace...', es: 'Cargando mercado...', ar: 'جارٍ تحميل السوق...', pt: 'Carregando mercado...', ja: 'マーケットを読み込み中...' },

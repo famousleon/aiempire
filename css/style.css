@@ -1647,6 +1647,198 @@ select, textarea, input {
 }
 
 /* ===========================================
+   Basic English 850 Daily
+   =========================================== */
+
+.basic850-section {
+  background: var(--color-bg);
+}
+
+.basic850-card {
+  max-width: 800px;
+  margin: 0 auto 24px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.basic850-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-secondary);
+}
+
+.basic850-english {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+.basic850-english mark.basic-word {
+  background: rgba(191, 77, 255, 0.2);
+  color: var(--color-accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+}
+
+.basic850-english mark.basic-word:hover::after {
+  content: attr(data-cn);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+}
+
+.basic850-reveal-btn {
+  display: block;
+  margin: 0 auto 24px;
+  padding: 10px 24px;
+  border-radius: 980px;
+  font-size: 14px;
+  color: var(--color-accent-tertiary);
+  border: 1px solid var(--color-accent-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.basic850-reveal-btn:hover {
+  background: rgba(0, 212, 170, 0.08);
+}
+
+.basic850-chinese {
+  font-size: clamp(17px, 2.5vw, 22px);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  padding: 16px 20px;
+  background: rgba(0, 212, 170, 0.05);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-accent-tertiary);
+}
+
+.basic850-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.basic850-word-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(191, 77, 255, 0.08);
+  border: 1px solid rgba(191, 77, 255, 0.2);
+  border-radius: 980px;
+  font-size: 14px;
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.basic850-word-tag:hover {
+  background: rgba(191, 77, 255, 0.15);
+  border-color: var(--color-accent);
+}
+
+.basic850-word-tag .word-emoji {
+  font-size: 16px;
+}
+
+.basic850-word-tag .word-text {
+  font-weight: 600;
+}
+
+.basic850-word-tag .word-cn {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.basic850-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.btn-basic850-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 980px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-basic850-nav:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-border-hover);
+}
+
+.basic850-counter {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .basic850-card {
+    padding: 28px 20px;
+  }
+
+  .basic850-english {
+    font-size: 18px;
+  }
+
+  .basic850-chinese {
+    font-size: 16px;
+  }
+
+  .basic850-nav {
+    gap: 12px;
+  }
+
+  .basic850-word-tag {
+    font-size: 13px;
+    padding: 5px 10px;
+  }
+}
+
+/* ===========================================
    Task Marketplace
    =========================================== */
 

@@ -32,6 +32,7 @@ const App = (() => {
     I18n.initLang();
     updateLangUI();
     I18n.applyTranslations();
+    renderBasic850();
     renderTasks();
     renderProofTaskSelect();
     renderProofHistory();
@@ -55,6 +56,16 @@ const App = (() => {
     // Hero
     dom.greeting = document.getElementById('greeting');
     dom.taskDate = document.getElementById('taskDate');
+
+    // Basic850
+    dom.basic850English = document.getElementById('basic850English');
+    dom.basic850Chinese = document.getElementById('basic850Chinese');
+    dom.basic850Words = document.getElementById('basic850Words');
+    dom.basic850RevealBtn = document.getElementById('basic850RevealBtn');
+    dom.basic850Counter = document.getElementById('basic850Counter');
+    dom.basic850Progress = document.getElementById('basic850Progress');
+    dom.basic850Prev = document.getElementById('basic850Prev');
+    dom.basic850Next = document.getElementById('basic850Next');
 
     // Tasks
     dom.tasksGrid = document.getElementById('tasksGrid');
@@ -182,6 +193,33 @@ const App = (() => {
     // Refresh news
     dom.refreshNews.addEventListener('click', refreshNews);
 
+    // Basic850 - reveal translation
+    dom.basic850RevealBtn.addEventListener('click', () => {
+      if (dom.basic850Chinese.style.display === 'none') {
+        dom.basic850Chinese.style.display = 'block';
+        dom.basic850RevealBtn.textContent = I18n.T('basic850.hide');
+        // Mark as learned
+        const today = new Date().toDateString();
+        localStorage.setItem('basic850_last_read', today);
+      } else {
+        dom.basic850Chinese.style.display = 'none';
+        dom.basic850RevealBtn.textContent = I18n.T('basic850.reveal');
+      }
+    });
+
+    // Basic850 - navigation
+    dom.basic850Prev.addEventListener('click', () => {
+      const total = Basic850.getSentenceCount();
+      basic850Offset = (basic850Offset - 1 + total) % total;
+      renderBasic850();
+    });
+
+    dom.basic850Next.addEventListener('click', () => {
+      const total = Basic850.getSentenceCount();
+      basic850Offset = (basic850Offset + 1) % total;
+      renderBasic850();
+    });
+
     // Proof - dropzone
     dom.proofDropzone.addEventListener('click', () => {
       dom.proofFileInput.click();
@@ -259,6 +297,55 @@ const App = (() => {
 
   function getCurrentCategory() {
     return currentCategory;
+  }
+
+  // --- Basic English 850 ---
+
+  let basic850Offset = 0;
+
+  function renderBasic850(offset) {
+    if (offset !== undefined) basic850Offset = offset;
+
+    const today = new Date();
+    const dayOfYear = Math.floor(
+      (today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24)
+    );
+    const total = Basic850.getSentenceCount();
+    const idx = ((dayOfYear + basic850Offset) % total + total) % total;
+
+    const sentence = Basic850.getSentenceByIndex(idx);
+    if (!sentence) return;
+
+    // Highlight English sentence
+    dom.basic850English.innerHTML = Basic850.highlightSentence(sentence);
+
+    // Chinese translation
+    dom.basic850Chinese.textContent = sentence.chinese;
+
+    // New words tags
+    dom.basic850Words.innerHTML = sentence.newWords.map(w =>
+      `<span class="basic850-word-tag">
+        <span class="word-emoji">${w.emoji}</span>
+        <span class="word-text">${w.word}</span>
+        <span class="word-cn">${w.cn}</span>
+      </span>`
+    ).join('');
+
+    // Counter
+    dom.basic850Counter.textContent = `${idx + 1} / ${total}`;
+
+    // Progress badge
+    const lastRead = localStorage.getItem('basic850_last_read');
+    const todayStr = today.toDateString();
+    if (lastRead === todayStr) {
+      dom.basic850Progress.textContent = '✅ 今日已学';
+    } else {
+      dom.basic850Progress.textContent = `📖 第 ${idx + 1} 句`;
+    }
+
+    // Reset reveal
+    dom.basic850Chinese.style.display = 'none';
+    dom.basic850RevealBtn.textContent = I18n.T('basic850.reveal');
   }
 
   // --- Tasks ---

@@ -16,6 +16,7 @@
         <span class="nav-logo-text">AI Empire</span>
       </a>
       <ul class="nav-links">
+        <li><a href="#basic850" data-i18n="nav.basic850">每日一学</a></li>
         <li><a href="#tasks" data-i18n="nav.tasks">今日任务</a></li>
         <li><a href="#news" data-i18n="nav.news">新闻任务</a></li>
         <li><a href="#market" data-i18n="nav.market">任务市场</a></li>
@@ -50,6 +51,7 @@
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu">
+    <a href="#basic850" data-i18n="nav.basic850">每日一学</a>
     <a href="#tasks" data-i18n="nav.tasks">今日任务</a>
     <a href="#news" data-i18n="nav.news">新闻任务</a>
     <a href="#market" data-i18n="nav.market">任务市场</a>
@@ -75,6 +77,40 @@
     </div>
     <div class="hero-scroll">
       <div class="scroll-indicator"></div>
+    </div>
+  </section>
+
+  <!-- Basic English 850 Daily Section -->
+  <section class="section basic850-section" id="basic850">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="basic850.title">📝 每日一学</h2>
+        <p class="section-desc" data-i18n="basic850.desc">每天一句只用 850 个基础英语词的句子。一次学一句，轻松掌握多个单词。</p>
+        <span class="section-badge" id="basic850Progress"></span>
+      </div>
+
+      <div class="basic850-card" id="basic850Card">
+        <div class="basic850-english" id="basic850English"></div>
+        <button class="basic850-reveal-btn" id="basic850RevealBtn" data-i18n="basic850.reveal">👆 点击查看翻译</button>
+        <div class="basic850-chinese" id="basic850Chinese" style="display:none;"></div>
+        <div class="basic850-words" id="basic850Words"></div>
+      </div>
+
+      <div class="basic850-nav">
+        <button class="btn-basic850-nav" id="basic850Prev">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 2L4 8L10 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span data-i18n="basic850.prev">上一句</span>
+        </button>
+        <span class="basic850-counter" id="basic850Counter"></span>
+        <button class="btn-basic850-nav" id="basic850Next">
+          <span data-i18n="basic850.next">下一句</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 2L12 8L6 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -488,6 +524,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/basic850.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/payment.js"></script>
   <script src="js/market.js"></script>
