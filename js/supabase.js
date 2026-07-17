@@ -20,8 +20,13 @@ const SupabaseDB = (() => {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log('[Supabase] Initialized:', SUPABASE_URL);
       // Verify actual connectivity
-      supabaseClient.from('_health').select().single().then(() => {
-        console.log('[Supabase] Connection verified');
+      supabaseClient.from('_health').select().single().then(({ error }) => {
+        if (error) {
+          console.error('[Supabase] WARNING: Cannot reach server at', SUPABASE_URL,
+            '— check your Supabase project URL and anon key.');
+        } else {
+          console.log('[Supabase] Connection verified');
+        }
       }).catch(() => {
         console.error('[Supabase] WARNING: Cannot reach server at', SUPABASE_URL,
           '— check your Supabase project URL and anon key.');
