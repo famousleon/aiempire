@@ -312,15 +312,19 @@ const Market = (() => {
     const email = document.getElementById('marketEmail').value;
     const password = document.getElementById('marketPassword').value;
 
-    const { data, error } = await SupabaseDB.signIn(email, password);
-    if (error) {
-      showToast(error.message || I18n.T('market.login.error') || '登录失败', 'error');
-      return;
+    try {
+      const { data, error } = await SupabaseDB.signIn(email, password);
+      if (error) {
+        showToast(error.message || I18n.T('market.login.error') || '登录失败', 'error');
+        return;
+      }
+      showToast(I18n.T('market.login.success') || '登录成功！', 'success');
+      document.getElementById('marketAuthModal').classList.remove('active');
+      loadMarketTasks();
+    } catch (e) {
+      console.error('[Market] Login failed:', e);
+      showToast('连接服务器失败，请检查网络或联系管理员', 'error');
     }
-
-    showToast(I18n.T('market.login.success') || '登录成功！', 'success');
-    document.getElementById('marketAuthModal').classList.remove('active');
-    loadMarketTasks();
   }
 
   async function handleSignup() {
@@ -328,15 +332,19 @@ const Market = (() => {
     const password = document.getElementById('marketSignupPassword').value;
     const username = document.getElementById('marketSignupUsername').value;
 
-    const { data, error } = await SupabaseDB.signUp(email, password, username);
-    if (error) {
-      showToast(error.message || I18n.T('market.signup.error') || '注册失败', 'error');
-      return;
+    try {
+      const { data, error } = await SupabaseDB.signUp(email, password, username);
+      if (error) {
+        showToast(error.message || I18n.T('market.signup.error') || '注册失败', 'error');
+        return;
+      }
+      showToast(I18n.T('market.signup.success') || '注册成功！请检查邮箱确认', 'success');
+      document.getElementById('marketAuthModal').classList.remove('active');
+      loadMarketTasks();
+    } catch (e) {
+      console.error('[Market] Signup failed:', e);
+      showToast('连接服务器失败，请检查网络或联系管理员', 'error');
     }
-
-    showToast(I18n.T('market.signup.success') || '注册成功！请检查邮箱确认', 'success');
-    document.getElementById('marketAuthModal').classList.remove('active');
-    loadMarketTasks();
   }
 
   async function handleSignOut() {
