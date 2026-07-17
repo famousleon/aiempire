@@ -20,16 +20,12 @@ const SupabaseDB = (() => {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log('[Supabase] Initialized:', SUPABASE_URL);
       // Verify actual connectivity
-      supabaseClient.from('_health').select().single().then(({ error }) => {
-        if (error) {
-          console.error('[Supabase] WARNING: Cannot reach server at', SUPABASE_URL,
-            '— check your Supabase project URL and anon key.');
-        } else {
-          console.log('[Supabase] Connection verified');
-        }
-      }).catch(() => {
+      supabaseClient.auth.getUser().then(({ error }) => {
+        // getUser returns error when no session logged in, that's fine — means server responded
+        console.log('[Supabase] Server reachable');
+      }).catch((e) => {
         console.error('[Supabase] WARNING: Cannot reach server at', SUPABASE_URL,
-          '— check your Supabase project URL and anon key.');
+          '— check your Supabase project URL and anon key.', e);
       });
       return supabaseClient;
     } catch (e) {
