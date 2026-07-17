@@ -53,6 +53,7 @@ const SupabaseDB = (() => {
       password,
       options: {
         data: { username },
+        emailRedirectTo: window.location.origin,
       },
     });
     return { data, error };
