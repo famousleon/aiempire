@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>股票看板 — AI Empire</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="stylesheet" href="css/stock.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-content">
+      <a href="https://aiempire.today" class="nav-back">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M12.5 4L6.5 10L12.5 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>返回主站</span>
+      </a>
+      <div class="nav-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>股票看板</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-market="us">美股</button>
+        <button class="nav-tab" data-market="hk">港股</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Search -->
+    <section class="search-section">
+      <div class="search-container">
+        <div class="search-box">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="输入股票代码或公司名称..." autocomplete="off">
+          <div class="search-spinner" id="searchSpinner" style="display:none;"></div>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </section>
+
+    <!-- Quote Card -->
+    <section class="quote-section" id="quoteSection" style="display:none;">
+      <div class="quote-card">
+        <div class="quote-header">
+          <div class="quote-title">
+            <span class="quote-name" id="quoteName">—</span>
+            <span class="quote-ticker" id="quoteTicker">—</span>
+            <span class="quote-market-tag" id="quoteMarketTag">US</span>
+          </div>
+          <div class="quote-actions">
+            <button class="btn-watchlist" id="btnWatchlist" title="加入自选股">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="quote-price-row">
+          <span class="quote-price" id="quotePrice">—</span>
+          <span class="quote-change" id="quoteChange">—</span>
+        </div>
+        <div class="quote-details">
+          <div class="detail-item"><span class="detail-label">开盘</span><span class="detail-value" id="quoteOpen">—</span></div>
+          <div class="detail-item"><span class="detail-label">最高</span><span class="detail-value" id="quoteHigh">—</span></div>
+          <div class="detail-item"><span class="detail-label">最低</span><span class="detail-value" id="quoteLow">—</span></div>
+          <div class="detail-item"><span class="detail-label">昨收</span><span class="detail-value" id="quotePrevClose">—</span></div>
+          <div class="detail-item"><span class="detail-label">成交量</span><span class="detail-value" id="quoteVolume">—</span></div>
+          <div class="detail-item"><span class="detail-label">市值</span><span class="detail-value" id="quoteMarketCap">—</span></div>
+          <div class="detail-item"><span class="detail-label">PE</span><span class="detail-value" id="quotePE">—</span></div>
+          <div class="detail-item"><span class="detail-label">PB</span><span class="detail-value" id="quotePB">—</span></div>
+          <div class="detail-item"><span class="detail-label">52周高</span><span class="detail-value" id="quote52High">—</span></div>
+          <div class="detail-item"><span class="detail-label">52周低</span><span class="detail-value" id="quote52Low">—</span></div>
+        </div>
+        <div class="quote-time" id="quoteTime">—</div>
+      </div>
+    </section>
+
+    <!-- K-line Chart -->
+    <section class="chart-section" id="chartSection" style="display:none;">
+      <div class="chart-header">
+        <h3>K 线图</h3>
+        <div class="chart-controls">
+          <div class="interval-btns">
+            <button class="interval-btn active" data-interval="1d">日K</button>
+            <button class="interval-btn" data-interval="1wk">周K</button>
+            <button class="interval-btn" data-interval="1mo">月K</button>
+          </div>
+          <div class="range-btns">
+            <button class="range-btn" data-range="1mo">1月</button>
+            <button class="range-btn" data-range="3mo">3月</button>
+            <button class="range-btn active" data-range="6mo">6月</button>
+            <button class="range-btn" data-range="1y">1年</button>
+          </div>
+          <div class="indicator-btns">
+            <button class="indicator-btn active" data-indicator="ma">MA</button>
+            <button class="indicator-btn" data-indicator="macd">MACD</button>
+            <button class="indicator-btn" data-indicator="rsi">RSI</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="klineCanvas"></canvas>
+      </div>
+    </section>
+
+    <!-- Screener (US only) -->
+    <section class="screener-section" id="screenerSection">
+      <div class="screener-header">
+        <h3>🔍 股票筛选器</h3>
+        <span class="screener-badge">美股专用</span>
+      </div>
+      <div class="screener-presets">
+        <button class="preset-btn" data-condition="consecutive_up" data-days="3">连续涨 3 天</button>
+        <button class="preset-btn" data-condition="consecutive_up" data-days="5">连续涨 5 天</button>
+        <button class="preset-btn" data-condition="consecutive_down" data-days="3">连续跌 3 天</button>
+        <button class="preset-btn" data-condition="pe_below" data-value="15">PE &lt; 15</button>
+        <button class="preset-btn" data-condition="pe_below" data-value="20">PE &lt; 20</button>
+        <button class="preset-btn" data-condition="change_above" data-value="3">涨幅 &gt; 3%</button>
+        <button class="preset-btn" data-condition="new_high" data-days="20">20日新高</button>
+      </div>
+      <div class="screener-results" id="screenerResults"></div>
+    </section>
+
+    <!-- Watchlist -->
+    <section class="watchlist-section">
+      <div class="watchlist-header">
+        <h3>⭐ 自选股</h3>
+        <span class="watchlist-count" id="watchlistCount">0</span>
+      </div>
+      <div class="watchlist-grid" id="watchlistGrid">
+        <div class="empty-state" id="watchlistEmpty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <p>还没有自选股</p>
+          <p class="empty-hint">搜索股票后点击 ☆ 添加</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>数据来自新浪/腾讯/东财/Yahoo，仅供参考，不构成投资建议。</p>
+    <p>© 2026 AI Empire · <a href="https://aiempire.today">返回主站</a></p>
+  </footer>
+
+  <script src="js/indicators.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/stock.js"></script>
+</body>
+</html>
