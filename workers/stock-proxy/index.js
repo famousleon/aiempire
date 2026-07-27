@@ -1,26 +1,17 @@
 /**
- * AI Empire Stock Data Proxy — Cloudflare Worker
- * 美股 + 港股数据代理，排除 A 股
- * 部署到 api.aiempire.today
+ * AI Empire Stock Data Proxy v2 — Cloudflare Worker
+ * 美股 + 港股，全部使用 Yahoo Finance 全球 API
  */
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
-// ─── CORS Headers ───────────────────────────────────────────
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-// ─── GBK Decoder ────────────────────────────────────────────
-async function decodeGbk(response) {
-  const buffer = await response.arrayBuffer();
-  return new TextDecoder("gbk").decode(buffer);
-}
-
-// ─── JSON Response Helper ───────────────────────────────────
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -32,180 +23,69 @@ function error(msg, status = 400) {
   return json({ error: msg }, status);
 }
 
-// ─── Cache ──────────────────────────────────────────────────
-async function cached(key, ttl, fn) {
-  const cache = caches.default;
-  const cacheKey = new Request(`https://stock-proxy/${key}`);
-  const cached = await cache.match(cacheKey);
-  if (cached) return JSON.parse(await cached.text());
-
-  const data = await fn();
-  const resp = new Response(JSON.stringify(data), {
-    headers: { "Cache-Control": `public, max-age=${ttl}` },
-  });
-  cache.put(cacheKey, resp.clone());
-  return data;
+// ─── Helpers ──────────────────────────────────────────────
+function formatLargeNum(n) {
+  if (!n || isNaN(n)) return null;
+  return n;
 }
 
-// ─── Quote: Sina US ─────────────────────────────────────────
-async function quoteSinaUS(ticker) {
-  const url = `https://hq.sinajs.cn/list=gb_${ticker.toLowerCase()}`;
+// ─── Quote: Yahoo Finance ─────────────────────────────────
+async function yahooQuote(symbol) {
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1d`;
   const resp = await fetch(url, {
-    headers: { Referer: "https://finance.sina.com.cn/", "User-Agent": UA },
+    headers: { "User-Agent": UA },
   });
-  const text = await decodeGbk(resp);
-  const m = text.match(/"(.+)"/);
-  if (!m) return null;
-  const f = m[1].split(",");
-  if (f.length < 30) return null;
-  return {
-    source: "sina",
-    name: f[0],
-    price: parseFloat(f[1]) || 0,
-    change_pct: parseFloat(f[2]) || 0,
-    timestamp: f[3],
-    open: parseFloat(f[5]) || 0,
-    high: parseFloat(f[6]) || 0,
-    low: parseFloat(f[7]) || 0,
-    prev_close: parseFloat(f[26]) || 0,
-    volume: parseFloat(f[10]) || 0,
-    high_52w: parseFloat(f[8]) || 0,
-    low_52w: parseFloat(f[9]) || 0,
-    market_cap: parseFloat(f[12]) || 0,
-    eps: parseFloat(f[13]) || 0,
-    pe: parseFloat(f[14]) || 0,
-  };
-}
-
-// ─── Quote: Tencent US ──────────────────────────────────────
-async function quoteTencentUS(ticker) {
-  const url = `https://qt.gtimg.cn/q=us${ticker.toUpperCase()}`;
-  const resp = await fetch(url);
-  const text = await decodeGbk(resp);
-  const m = text.match(/"(.+)"/);
-  if (!m) return null;
-  const f = m[1].split("~");
-  if (f.length < 52) return null;
-  return {
-    source: "tencent",
-    name: f[1],
-    name_en: f[46],
-    price: parseFloat(f[3]) || 0,
-    prev_close: parseFloat(f[4]) || 0,
-    open: parseFloat(f[5]) || 0,
-    volume: parseInt(parseFloat(f[6])) || 0,
-    high: parseFloat(f[33]) || 0,
-    low: parseFloat(f[34]) || 0,
-    high_52w: parseFloat(f[48]) || 0,
-    low_52w: parseFloat(f[49]) || 0,
-    change_pct: parseFloat(f[32]) || 0,
-    market_cap: parseFloat(f[45]) || 0,
-    pe: parseFloat(f[39]) || 0,
-    pb: parseFloat(f[51]) || 0,
-    eps: parseFloat(f[47]) || 0,
-    currency: f[35],
-    timestamp: f[30],
-  };
-}
-
-// ─── Quote: Sina HK ─────────────────────────────────────────
-async function quoteSinaHK(code) {
-  const url = `https://hq.sinajs.cn/list=rt_hk${code}`;
-  const resp = await fetch(url, {
-    headers: { Referer: "https://finance.sina.com.cn/", "User-Agent": UA },
-  });
-  const text = await decodeGbk(resp);
-  const m = text.match(/"(.+)"/);
-  if (!m) return null;
-  const f = m[1].split(",");
-  if (f.length < 15) return null;
-  return {
-    source: "sina",
-    name: f[1],
-    name_en: f[0],
-    price: parseFloat(f[6]) || 0,
-    change_pct: parseFloat(f[8]) || 0,
-    open: parseFloat(f[2]) || 0,
-    high: parseFloat(f[4]) || 0,
-    low: parseFloat(f[5]) || 0,
-    prev_close: parseFloat(f[3]) || 0,
-    volume: parseFloat(f[12]) || 0,
-    amount: parseFloat(f[11]) || 0,
-  };
-}
-
-// ─── Quote: Tencent HK ──────────────────────────────────────
-async function quoteTencentHK(code) {
-  const url = `https://qt.gtimg.cn/q=r_hk${code}`;
-  const resp = await fetch(url);
-  const text = await decodeGbk(resp);
-  const m = text.match(/"(.+)"/);
-  if (!m) return null;
-  const f = m[1].split("~");
-  if (f.length < 76) return null;
-  return {
-    source: "tencent",
-    name: f[1],
-    code: f[2],
-    name_en: f[46],
-    price: parseFloat(f[3]) || 0,
-    prev_close: parseFloat(f[4]) || 0,
-    open: parseFloat(f[5]) || 0,
-    volume: parseInt(parseFloat(f[6])) || 0,
-    high: parseFloat(f[33]) || 0,
-    low: parseFloat(f[34]) || 0,
-    high_52w: parseFloat(f[48]) || 0,
-    low_52w: parseFloat(f[49]) || 0,
-    change_pct: parseFloat(f[32]) || 0,
-    market_cap: parseFloat(f[45]) || 0,
-    pe: parseFloat(f[39]) || 0,
-    pb: parseFloat(f[58]) || 0,
-    currency: f[75],
-    timestamp: f[30],
-  };
-}
-
-// ─── K-line: Sina US ────────────────────────────────────────
-async function klineSinaUS(ticker, num = 120) {
-  const url =
-    "https://stock.finance.sina.com.cn/usstock/api/jsonp.php/var/US_MinKService.getDailyK";
-  const resp = await fetch(
-    `${url}?symbol=${encodeURIComponent(ticker.toUpperCase())}&num=${num}`,
-    { headers: { Referer: "https://finance.sina.com.cn/", "User-Agent": UA } },
-  );
-  const text = await resp.text();
-  const m = text.match(/\((\[.+\])\)/);
-  if (!m) return null;
-  const items = JSON.parse(m[1]);
-  return items.map((it) => ({
-    date: it.d,
-    open: parseFloat(it.o) || 0,
-    high: parseFloat(it.h) || 0,
-    low: parseFloat(it.l) || 0,
-    close: parseFloat(it.c) || 0,
-    volume: parseInt(it.v) || 0,
-  }));
-}
-
-// ─── K-line: Yahoo (US + HK) ────────────────────────────────
-async function klineYahoo(symbol, interval = "1d", range = "6mo") {
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
-  const resp = await fetch(
-    `${url}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`,
-    {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-      },
-    },
-  );
   if (!resp.ok) return null;
   const d = await resp.json();
   const result = d?.chart?.result?.[0];
   if (!result) return null;
+
+  const meta = result.meta || {};
+  const regular = meta.regularMarketPrice;
+  const prev = meta.chartPreviousClose ?? meta.previousClose;
+  const change = regular != null && prev ? regular - prev : 0;
+  const changePct = prev ? (change / prev) * 100 : 0;
+
+  return {
+    name: meta.shortName || meta.symbol || symbol,
+    name_en: meta.longName || meta.shortName || "",
+    symbol: meta.symbol || symbol,
+    price: regular || 0,
+    prev_close: prev || 0,
+    open: meta.regularMarketOpen || 0,
+    high: meta.regularMarketDayHigh || 0,
+    low: meta.regularMarketDayLow || 0,
+    volume: meta.regularMarketVolume || 0,
+    market_cap: meta.marketCap || 0,
+    pe: meta.trailingPE || 0,
+    eps: meta.trailingEps || 0,
+    high_52w: meta.fiftyTwoWeekHigh || 0,
+    low_52w: meta.fiftyTwoWeekLow || 0,
+    currency: meta.currency || "USD",
+    change_pct: Math.round(changePct * 100) / 100,
+    timestamp: meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString().replace("T", " ").slice(0, 19)
+      : "",
+    pb: meta.priceToBook || 0,
+  };
+}
+
+// ─── K-line: Yahoo Finance ────────────────────────────────
+async function yahooKline(symbol, interval = "1d", range = "6mo") {
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
+  const params = new URLSearchParams({ interval, range });
+  const resp = await fetch(`${url}?${params}`, {
+    headers: { "User-Agent": UA },
+  });
+  if (!resp.ok) return null;
+  const d = await resp.json();
+  const result = d?.chart?.result?.[0];
+  if (!result) return null;
+
   const timestamps = result.timestamp || [];
   const quote = result.indicators?.quote?.[0] || {};
   const klines = [];
+
   for (let i = 0; i < timestamps.length; i++) {
     const ts = timestamps[i];
     const date = new Date(ts * 1000);
@@ -213,6 +93,7 @@ async function klineYahoo(symbol, interval = "1d", range = "6mo") {
       interval.includes("m") || interval.includes("h")
         ? date.toISOString().slice(0, 16).replace("T", " ")
         : date.toISOString().slice(0, 10);
+
     klines.push({
       date: dateStr,
       open: round2(quote.open?.[i]),
@@ -229,71 +110,93 @@ function round2(v) {
   return v != null ? Math.round(v * 100) / 100 : 0;
 }
 
-// ─── Search: Eastmoney ──────────────────────────────────────
-async function stockSearch(q, market = "us") {
-  const url =
-    "https://push2.eastmoney.com/api/qt/stock.suggest";
-  const secType = market === "hk" ? "116" : "105,106";
-  const resp = await fetch(
-    `${url}?keyword=${encodeURIComponent(q)}&secid_list=&cb=&client=WEB&type=&token=&_=${Date.now()}`,
-    { headers: { "User-Agent": UA, Referer: "https://quote.eastmoney.com/" } },
-  );
+// ─── Search: Yahoo Finance ────────────────────────────────
+async function yahooSearch(query) {
+  // Yahoo Finance autocomplete API
+  const url = `https://query2.finance.yahoo.com/v1/finance/symbols`;
+  const params = new URLSearchParams({ query: encodeURIComponent(query) });
+  const resp = await fetch(`${url}?${params}`, {
+    headers: { "User-Agent": UA },
+  });
+  if (!resp.ok) return [];
   const d = await resp.json();
-  const items = d?.data?.diff || [];
+  const items = d?.symbols || [];
   return items
     .filter((it) => {
-      if (market === "us") {
-        return it.market === 105 || it.market === 106;
-      }
-      return it.market === 116;
+      // Filter out mutual funds, ETFs that aren't individual stocks
+      const type = (it.quoteType || "").toLowerCase();
+      return type === "equity" || type === "";
     })
     .slice(0, 20)
-    .map((it) => ({
-      code: it.code,
-      name: it.name,
-      market: it.market,
-      market_name: it.market === 116 ? "HK" : "US",
-      secid: `${it.market}.${it.code}`,
-    }));
+    .map((it) => {
+      const sym = it.symbol || "";
+      const isHK = sym.endsWith(".HK");
+      return {
+        code: isHK ? sym.replace(".HK", "") : sym,
+        name: it.shortName || it.longName || sym,
+        market: isHK ? "HK" : "US",
+        type: it.quoteType || "EQUITY",
+      };
+    });
 }
 
-// ─── List: Eastmoney push2 ──────────────────────────────────
-async function stockList(market) {
-  const secid = market === "hk" ? "m:116" : "m:105,m:106";
-  const url =
-    "https://push2.eastmoney.com/api/qt/clist/get";
-  const params = new URLSearchParams({
-    pn: "1",
-    pz: "500",
-    np: "1",
-    fltt: "2",
-    invt: "2",
-    fid: "f3",
-    fs: secid,
-    fields: "f2,f3,f4,f5,f6,f7,f12,f14",
-  });
-  const resp = await fetch(`${url}?${params}`, {
-    headers: { "User-Agent": UA, Referer: "https://quote.eastmoney.com/" },
-  });
-  const d = await resp.json();
-  const items = d?.data?.diff || [];
-  return items.map((it) => ({
-    code: it.f12,
-    name: it.f14,
-    price: it.f2 !== "-" ? it.f2 : null,
-    change_pct: it.f3 !== "-" ? it.f3 : null,
-    change: it.f4 !== "-" ? it.f4 : null,
-    volume: it.f5 !== "-" ? it.f5 : null,
-    amount: it.f6 !== "-" ? it.f6 : null,
-    amplitude: it.f7 !== "-" ? it.f7 : null,
-    market: market,
-  }));
-}
+// ─── List: Yahoo Finance — Not directly available ─────────
+// Yahoo doesn't provide a full market list API.
+// We'll return a curated popular list instead.
+const POPULAR_US = [
+  { code: "AAPL", name: "Apple Inc.", market: "US" },
+  { code: "MSFT", name: "Microsoft Corporation", market: "US" },
+  { code: "GOOGL", name: "Alphabet Inc.", market: "US" },
+  { code: "AMZN", name: "Amazon.com Inc.", market: "US" },
+  { code: "NVDA", name: "NVIDIA Corporation", market: "US" },
+  { code: "META", name: "Meta Platforms Inc.", market: "US" },
+  { code: "TSLA", name: "Tesla Inc.", market: "US" },
+  { code: "BRK-B", name: "Berkshire Hathaway Inc.", market: "US" },
+  { code: "JPM", name: "JPMorgan Chase & Co.", market: "US" },
+  { code: "V", name: "Visa Inc.", market: "US" },
+  { code: "JNJ", name: "Johnson & Johnson", market: "US" },
+  { code: "WMT", name: "Walmart Inc.", market: "US" },
+  { code: "XOM", name: "Exxon Mobil Corporation", market: "US" },
+  { code: "PG", name: "Procter & Gamble Co.", market: "US" },
+  { code: "MA", name: "Mastercard Inc.", market: "US" },
+  { code: "HD", name: "Home Depot Inc.", market: "US" },
+  { code: "DIS", name: "Walt Disney Co.", market: "US" },
+  { code: "BABA", name: "Alibaba Group Holding Ltd.", market: "US" },
+  { code: "NFLX", name: "Netflix Inc.", market: "US" },
+  { code: "AMD", name: "Advanced Micro Devices Inc.", market: "US" },
+  { code: "INTC", name: "Intel Corporation", market: "US" },
+  { code: "CSCO", name: "Cisco Systems Inc.", market: "US" },
+  { code: "PFE", name: "Pfizer Inc.", market: "US" },
+  { code: "KO", name: "Coca-Cola Co.", market: "US" },
+  { code: "PEP", name: "PepsiCo Inc.", market: "US" },
+  { code: "ABT", name: "Abbott Laboratories", market: "US" },
+  { code: "CRM", name: "Salesforce Inc.", market: "US" },
+  { code: "ORCL", name: "Oracle Corporation", market: "US" },
+  { code: "TMO", name: "Thermo Fisher Scientific Inc.", market: "US" },
+  { code: "MRK", name: "Merck & Co. Inc.", market: "US" },
+];
 
-// ─── Main Handler ───────────────────────────────────────────
+const POPULAR_HK = [
+  { code: "0700", name: "腾讯控股", market: "HK" },
+  { code: "9988", name: "阿里巴巴", market: "HK" },
+  { code: "9618", name: "京东集团", market: "HK" },
+  { code: "1024", name: "快手", market: "HK" },
+  { code: "3690", name: "美团", market: "HK" },
+  { code: "9888", name: "百度集团", market: "HK" },
+  { code: "2269", name: "药明生物", market: "HK" },
+  { code: "1810", name: "小米集团", market: "HK" },
+  { code: "0981", name: "中芯国际", market: "HK" },
+  { code: "0941", name: "中国移动", market: "HK" },
+  { code: "2318", name: "中国平安", market: "HK" },
+  { code: "0388", name: "香港交易所", market: "HK" },
+  { code: "1299", name: "友邦保险", market: "HK" },
+  { code: "0005", name: "汇丰控股", market: "HK" },
+  { code: "2020", name: "安踏体育", market: "HK" },
+];
+
+// ─── Main Handler ─────────────────────────────────────────
 export default {
   async fetch(request) {
-    // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: CORS });
     }
@@ -309,72 +212,26 @@ export default {
       switch (action) {
         case "quote": {
           const market = url.searchParams.get("market") || "us";
-          const ticker = url.searchParams.get("ticker");
-          const code = url.searchParams.get("code");
-
-          if (market === "us") {
-            if (!ticker) return error("Missing ticker for US market");
-            const [sina, tencent] = await Promise.allSettled([
-              quoteSinaUS(ticker),
-              quoteTencentUS(ticker),
-            ]);
-            const result = { market: "us", ticker, currency: "USD" };
-            if (sina.status === "fulfilled" && sina.value)
-              result.sina = sina.value;
-            if (tencent.status === "fulfilled" && tencent.value)
-              result.tencent = tencent.value;
-            // Merge: prefer tencent (more fields)
-            if (result.tencent) {
-              result.name = result.tencent.name;
-              result.price = result.tencent.price;
-              result.change_pct = result.tencent.change_pct;
-              result.open = result.tencent.open;
-              result.high = result.tencent.high;
-              result.low = result.tencent.low;
-              result.prev_close = result.tencent.prev_close;
-              result.volume = result.tencent.volume;
-              result.pe = result.tencent.pe;
-              result.pb = result.tencent.pb;
-              result.market_cap = result.tencent.market_cap;
-              result.eps = result.tencent.eps;
-              result.high_52w = result.tencent.high_52w;
-              result.low_52w = result.tencent.low_52w;
-            } else if (result.sina) {
-              Object.assign(result, result.sina);
-            }
-            return json(result);
-          } else if (market === "hk") {
+          let symbol;
+          if (market === "hk") {
+            const code = url.searchParams.get("code");
             if (!code) return error("Missing code for HK market");
-            const cleanCode = code.replace(/^0+/, "").padStart(5, "0") || code;
-            const [sina, tencent] = await Promise.allSettled([
-              quoteSinaHK(cleanCode),
-              quoteTencentHK(cleanCode),
-            ]);
-            const result = { market: "hk", code: cleanCode, currency: "HKD" };
-            if (sina.status === "fulfilled" && sina.value)
-              result.sina = sina.value;
-            if (tencent.status === "fulfilled" && tencent.value)
-              result.tencent = tencent.value;
-            if (result.tencent) {
-              result.name = result.tencent.name;
-              result.price = result.tencent.price;
-              result.change_pct = result.tencent.change_pct;
-              result.open = result.tencent.open;
-              result.high = result.tencent.high;
-              result.low = result.tencent.low;
-              result.prev_close = result.tencent.prev_close;
-              result.volume = result.tencent.volume;
-              result.pe = result.tencent.pe;
-              result.pb = result.tencent.pb;
-              result.market_cap = result.tencent.market_cap;
-              result.high_52w = result.tencent.high_52w;
-              result.low_52w = result.tencent.low_52w;
-            } else if (result.sina) {
-              Object.assign(result, result.sina);
-            }
-            return json(result);
+            symbol = code.replace(/^0+/, "").padStart(4, "0") + ".HK";
+          } else {
+            const ticker = url.searchParams.get("ticker");
+            if (!ticker) return error("Missing ticker for US market");
+            symbol = ticker.toUpperCase();
           }
-          return error("Invalid market. Use 'us' or 'hk'");
+
+          const data = await yahooQuote(symbol);
+          if (!data) return error("Failed to fetch quote data", 502);
+
+          return json({
+            ...data,
+            market: market,
+            ticker: data.symbol,
+            currency: data.currency,
+          });
         }
 
         case "kline": {
@@ -382,71 +239,49 @@ export default {
           const interval = url.searchParams.get("interval") || "1d";
           const range = url.searchParams.get("range") || "6mo";
 
-          if (market === "us") {
-            const ticker = url.searchParams.get("ticker");
-            if (!ticker) return error("Missing ticker for US market");
-            // Try Sina first, fallback to Yahoo
-            let klines = await klineSinaUS(
-              ticker,
-              interval === "1d"
-                ? 250
-                : interval === "1wk"
-                  ? 120
-                  : interval === "1mo"
-                    ? 60
-                    : 250,
-            );
-            if (!klines || klines.length === 0) {
-              const yahooSymbol = ticker.toUpperCase();
-              klines = await klineYahoo(yahooSymbol, interval, range);
-            }
-            return json({
-              market: "us",
-              ticker,
-              interval,
-              range,
-              data: klines || [],
-            });
-          } else if (market === "hk") {
+          let symbol;
+          if (market === "hk") {
             const code = url.searchParams.get("code");
             if (!code) return error("Missing code for HK market");
-            const cleanCode = code.replace(/^0+/, "").padStart(5, "0") || code;
-            const klines = await klineYahoo(
-              `${cleanCode}.HK`,
-              interval,
-              range,
-            );
-            return json({
-              market: "hk",
-              code: cleanCode,
-              interval,
-              range,
-              data: klines || [],
-            });
+            symbol = code.replace(/^0+/, "").padStart(4, "0") + ".HK";
+          } else {
+            const ticker = url.searchParams.get("ticker");
+            if (!ticker) return error("Missing ticker for US market");
+            symbol = ticker.toUpperCase();
           }
-          return error("Invalid market. Use 'us' or 'hk'");
+
+          const klines = await yahooKline(symbol, interval, range);
+          if (!klines) return error("Failed to fetch kline data", 502);
+
+          return json({
+            market,
+            symbol,
+            interval,
+            range,
+            data: klines,
+          });
         }
 
         case "search": {
           const q = url.searchParams.get("q");
-          const market = url.searchParams.get("market") || "us";
           if (!q) return error("Missing search query");
-          const results = await cached(
-            `search_${market}_${q}`,
-            3600,
-            () => stockSearch(q, market),
-          );
-          return json({ market, query: q, results });
+          const results = await yahooSearch(q);
+          // Filter by market if specified
+          const market = url.searchParams.get("market");
+          const filtered = market
+            ? results.filter((r) => r.market === market.toUpperCase())
+            : results;
+          return json({ results: filtered });
         }
 
         case "list": {
           const market = url.searchParams.get("market") || "us";
-          const results = await cached(
-            `list_${market}`,
-            600,
-            () => stockList(market),
-          );
-          return json({ market, total: results.length, results });
+          const list = market === "hk" ? POPULAR_HK : POPULAR_US;
+          return json({
+            market,
+            total: list.length,
+            results: list,
+          });
         }
 
         default:
