@@ -48,9 +48,11 @@
       </div>
     </section>
 
-    <!-- Quote Card -->
-    <section class="quote-section" id="quoteSection" style="display:none;">
-      <div class="quote-card">
+    <!-- Detail View (hidden until stock selected) -->
+    <div id="detailView" style="display:none;">
+
+      <!-- Quote Card -->
+      <section class="quote-card">
         <div class="quote-header">
           <div class="quote-title">
             <span class="quote-name" id="quoteName">—</span>
@@ -65,10 +67,37 @@
             </button>
           </div>
         </div>
+
         <div class="quote-price-row">
           <span class="quote-price" id="quotePrice">—</span>
           <span class="quote-change" id="quoteChange">—</span>
         </div>
+
+        <!-- Day Range Bar -->
+        <div class="day-range" id="dayRange" style="display:none;">
+          <div class="day-range-labels">
+            <span id="dayRangeLow">—</span>
+            <span class="day-range-title">今日区间</span>
+            <span id="dayRangeHigh">—</span>
+          </div>
+          <div class="day-range-track">
+            <div class="day-range-marker" id="dayRangeMarker"></div>
+          </div>
+        </div>
+
+        <!-- 52 Week Range Bar -->
+        <div class="week-range" id="weekRange" style="display:none;">
+          <div class="day-range-labels">
+            <span id="weekRangeLow">—</span>
+            <span class="day-range-title">52 周区间</span>
+            <span id="weekRangeHigh">—</span>
+          </div>
+          <div class="day-range-track">
+            <div class="day-range-marker" id="weekRangeMarker"></div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
         <div class="quote-details">
           <div class="detail-item"><span class="detail-label">开盘</span><span class="detail-value" id="quoteOpen">—</span></div>
           <div class="detail-item"><span class="detail-label">最高</span><span class="detail-value" id="quoteHigh">—</span></div>
@@ -76,42 +105,44 @@
           <div class="detail-item"><span class="detail-label">昨收</span><span class="detail-value" id="quotePrevClose">—</span></div>
           <div class="detail-item"><span class="detail-label">成交量</span><span class="detail-value" id="quoteVolume">—</span></div>
           <div class="detail-item"><span class="detail-label">市值</span><span class="detail-value" id="quoteMarketCap">—</span></div>
-          <div class="detail-item"><span class="detail-label">PE</span><span class="detail-value" id="quotePE">—</span></div>
+          <div class="detail-item"><span class="detail-label">PE (TTM)</span><span class="detail-value" id="quotePE">—</span></div>
+          <div class="detail-item"><span class="detail-label">EPS (TTM)</span><span class="detail-value" id="quoteEPS">—</span></div>
           <div class="detail-item"><span class="detail-label">PB</span><span class="detail-value" id="quotePB">—</span></div>
           <div class="detail-item"><span class="detail-label">52周高</span><span class="detail-value" id="quote52High">—</span></div>
           <div class="detail-item"><span class="detail-label">52周低</span><span class="detail-value" id="quote52Low">—</span></div>
         </div>
         <div class="quote-time" id="quoteTime">—</div>
-      </div>
-    </section>
+      </section>
 
-    <!-- K-line Chart -->
-    <section class="chart-section" id="chartSection" style="display:none;">
-      <div class="chart-header">
-        <h3>K 线图</h3>
-        <div class="chart-controls">
-          <div class="interval-btns">
-            <button class="interval-btn active" data-interval="1d">日K</button>
-            <button class="interval-btn" data-interval="1wk">周K</button>
-            <button class="interval-btn" data-interval="1mo">月K</button>
-          </div>
-          <div class="range-btns">
-            <button class="range-btn" data-range="1mo">1月</button>
-            <button class="range-btn" data-range="3mo">3月</button>
-            <button class="range-btn active" data-range="6mo">6月</button>
-            <button class="range-btn" data-range="1y">1年</button>
-          </div>
-          <div class="indicator-btns">
-            <button class="indicator-btn active" data-indicator="ma">MA</button>
-            <button class="indicator-btn" data-indicator="macd">MACD</button>
-            <button class="indicator-btn" data-indicator="rsi">RSI</button>
+      <!-- K-line Chart -->
+      <section class="chart-section">
+        <div class="chart-header">
+          <h3>K 线图</h3>
+          <div class="chart-controls">
+            <div class="interval-btns">
+              <button class="interval-btn active" data-interval="1d">日K</button>
+              <button class="interval-btn" data-interval="1wk">周K</button>
+              <button class="interval-btn" data-interval="1mo">月K</button>
+            </div>
+            <div class="range-btns">
+              <button class="range-btn" data-range="1mo">1月</button>
+              <button class="range-btn" data-range="3mo">3月</button>
+              <button class="range-btn active" data-range="6mo">6月</button>
+              <button class="range-btn" data-range="1y">1年</button>
+            </div>
+            <div class="indicator-btns">
+              <button class="indicator-btn active" data-indicator="ma">MA</button>
+              <button class="indicator-btn" data-indicator="macd">MACD</button>
+              <button class="indicator-btn" data-indicator="rsi">RSI</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="chart-container">
-        <canvas id="klineCanvas"></canvas>
-      </div>
-    </section>
+        <div class="chart-container">
+          <canvas id="klineCanvas"></canvas>
+        </div>
+      </section>
+
+    </div>
 
     <!-- Screener (US only) -->
     <section class="screener-section" id="screenerSection">
@@ -152,7 +183,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>数据来自新浪/腾讯/东财/Yahoo，仅供参考，不构成投资建议。</p>
+    <p>数据来自 Yahoo Finance，仅供参考，不构成投资建议。</p>
     <p>© 2026 AI Empire · <a href="https://aiempire.today">返回主站</a></p>
   </footer>
 

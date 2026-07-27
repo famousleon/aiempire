@@ -1,6 +1,6 @@
 /**
- * AI Empire Stock Data Proxy v2 — Cloudflare Worker
- * 美股 + 港股，全部使用 Yahoo Finance 全球 API
+ * AI Empire Stock Data Proxy v3 — Cloudflare Worker
+ * 美股 + 港股，Yahoo Finance 行情/K线 + 本地股票搜索
  */
 
 const UA =
@@ -23,18 +23,10 @@ function error(msg, status = 400) {
   return json({ error: msg }, status);
 }
 
-// ─── Helpers ──────────────────────────────────────────────
-function formatLargeNum(n) {
-  if (!n || isNaN(n)) return null;
-  return n;
-}
-
-// ─── Quote: Yahoo Finance ─────────────────────────────────
+// ─── Yahoo Finance Quote ──────────────────────────────────
 async function yahooQuote(symbol) {
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1d`;
-  const resp = await fetch(url, {
-    headers: { "User-Agent": UA },
-  });
+  const resp = await fetch(url, { headers: { "User-Agent": UA } });
   if (!resp.ok) return null;
   const d = await resp.json();
   const result = d?.chart?.result?.[0];
@@ -70,7 +62,7 @@ async function yahooQuote(symbol) {
   };
 }
 
-// ─── K-line: Yahoo Finance ────────────────────────────────
+// ─── Yahoo Finance K-line ─────────────────────────────────
 async function yahooKline(symbol, interval = "1d", range = "6mo") {
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
   const params = new URLSearchParams({ interval, range });
@@ -110,89 +102,124 @@ function round2(v) {
   return v != null ? Math.round(v * 100) / 100 : 0;
 }
 
-// ─── Search: Yahoo Finance ────────────────────────────────
-async function yahooSearch(query) {
-  // Yahoo Finance autocomplete API
-  const url = `https://query2.finance.yahoo.com/v1/finance/symbols`;
-  const params = new URLSearchParams({ query: encodeURIComponent(query) });
-  const resp = await fetch(`${url}?${params}`, {
-    headers: { "User-Agent": UA },
-  });
-  if (!resp.ok) return [];
-  const d = await resp.json();
-  const items = d?.symbols || [];
-  return items
-    .filter((it) => {
-      // Filter out mutual funds, ETFs that aren't individual stocks
-      const type = (it.quoteType || "").toLowerCase();
-      return type === "equity" || type === "";
-    })
-    .slice(0, 20)
-    .map((it) => {
-      const sym = it.symbol || "";
-      const isHK = sym.endsWith(".HK");
-      return {
-        code: isHK ? sym.replace(".HK", "") : sym,
-        name: it.shortName || it.longName || sym,
-        market: isHK ? "HK" : "US",
-        type: it.quoteType || "EQUITY",
-      };
-    });
+// ─── Stock Universe (searchable) ──────────────────────────
+const STOCKS = [
+  // US Tech
+  { code: "AAPL", name: "Apple 苹果", market: "US", sector: "科技" },
+  { code: "MSFT", name: "Microsoft 微软", market: "US", sector: "科技" },
+  { code: "GOOGL", name: "Alphabet 谷歌", market: "US", sector: "科技" },
+  { code: "GOOG", name: "Alphabet-C 谷歌", market: "US", sector: "科技" },
+  { code: "AMZN", name: "Amazon 亚马逊", market: "US", sector: "科技" },
+  { code: "NVDA", name: "NVIDIA 英伟达", market: "US", sector: "科技" },
+  { code: "META", name: "Meta 脸书", market: "US", sector: "科技" },
+  { code: "TSLA", name: "Tesla 特斯拉", market: "US", sector: "科技" },
+  { code: "AMD", name: "AMD 超威半导体", market: "US", sector: "科技" },
+  { code: "INTC", name: "Intel 英特尔", market: "US", sector: "科技" },
+  { code: "NFLX", name: "Netflix 奈飞", market: "US", sector: "科技" },
+  { code: "CRM", name: "Salesforce", market: "US", sector: "科技" },
+  { code: "ORCL", name: "Oracle 甲骨文", market: "US", sector: "科技" },
+  { code: "CSCO", name: "Cisco 思科", market: "US", sector: "科技" },
+  { code: "ADBE", name: "Adobe", market: "US", sector: "科技" },
+  { code: "AVGO", name: "Broadcom 博通", market: "US", sector: "科技" },
+  { code: "QCOM", name: "Qualcomm 高通", market: "US", sector: "科技" },
+  { code: "TXN", name: "Texas Instruments 德州仪器", market: "US", sector: "科技" },
+  { code: "IBM", name: "IBM", market: "US", sector: "科技" },
+  { code: "BABA", name: "Alibaba 阿里巴巴", market: "US", sector: "科技" },
+  { code: "PDD", name: "PDD 拼多多", market: "US", sector: "科技" },
+  { code: "JD", name: "JD 京东", market: "US", sector: "科技" },
+  { code: "BIDU", name: "Baidu 百度", market: "US", sector: "科技" },
+  { code: "NIO", name: "NIO 蔚来", market: "US", sector: "科技" },
+  { code: "LI", name: "Li Auto 理想", market: "US", sector: "科技" },
+  { code: "XPEV", name: "XPeng 小鹏", market: "US", sector: "科技" },
+  // US Finance
+  { code: "JPM", name: "JPMorgan 摩根大通", market: "US", sector: "金融" },
+  { code: "V", name: "Visa", market: "US", sector: "金融" },
+  { code: "MA", name: "Mastercard 万事达", market: "US", sector: "金融" },
+  { code: "BAC", name: "Bank of America 美国银行", market: "US", sector: "金融" },
+  { code: "GS", name: "Goldman Sachs 高盛", market: "US", sector: "金融" },
+  { code: "MS", name: "Morgan Stanley 摩根士丹利", market: "US", sector: "金融" },
+  { code: "WFC", name: "Wells Fargo 富国银行", market: "US", sector: "金融" },
+  { code: "C", name: "Citigroup 花旗", market: "US", sector: "金融" },
+  { code: "BRK-B", name: "Berkshire Hathaway 伯克希尔", market: "US", sector: "金融" },
+  // US Consumer
+  { code: "WMT", name: "Walmart 沃尔玛", market: "US", sector: "消费" },
+  { code: "HD", name: "Home Depot 家得宝", market: "US", sector: "消费" },
+  { code: "DIS", name: "Disney 迪士尼", market: "US", sector: "消费" },
+  { code: "MCD", name: "McDonalds 麦当劳", market: "US", sector: "消费" },
+  { code: "NKE", name: "Nike 耐克", market: "US", sector: "消费" },
+  { code: "SBUX", name: "Starbucks 星巴克", market: "US", sector: "消费" },
+  { code: "KO", name: "Coca-Cola 可口可乐", market: "US", sector: "消费" },
+  { code: "PEP", name: "PepsiCo 百事可乐", market: "US", sector: "消费" },
+  // US Health
+  { code: "JNJ", name: "Johnson & Johnson 强生", market: "US", sector: "医疗" },
+  { code: "PFE", name: "Pfizer 辉瑞", market: "US", sector: "医疗" },
+  { code: "MRK", name: "Merck 默克", market: "US", sector: "医疗" },
+  { code: "ABT", name: "Abbott 雅培", market: "US", sector: "医疗" },
+  { code: "TMO", name: "Thermo Fisher", market: "US", sector: "医疗" },
+  { code: "LLY", name: "Eli Lilly 礼来", market: "US", sector: "医疗" },
+  // US Energy
+  { code: "XOM", name: "Exxon Mobil 埃克森美孚", market: "US", sector: "能源" },
+  { code: "CVX", name: "Chevron 雪佛龙", market: "US", sector: "能源" },
+  // US Other
+  { code: "PG", name: "Procter & Gamble 宝洁", market: "US", sector: "消费" },
+  { code: "UNH", name: "UnitedHealth 联合健康", market: "US", sector: "医疗" },
+  { code: "AMGN", name: "Amgen 安进", market: "US", sector: "医疗" },
+  { code: "PYPL", name: "PayPal", market: "US", sector: "金融" },
+  { code: "SQ", name: "Block 方块", market: "US", sector: "金融" },
+  { code: "UBER", name: "Uber", market: "US", sector: "科技" },
+  { code: "ABNB", name: "Airbnb 爱彼迎", market: "US", sector: "科技" },
+  { code: "COIN", name: "Coinbase", market: "US", sector: "金融" },
+  { code: "PLTR", name: "Palantir", market: "US", sector: "科技" },
+  { code: "SNOW", name: "Snowflake", market: "US", sector: "科技" },
+  { code: "RIVN", name: "Rivian", market: "US", sector: "科技" },
+  { code: "LCID", name: "Lucid", market: "US", sector: "科技" },
+  // HK Tech
+  { code: "0700", name: "腾讯控股", market: "HK", sector: "科技" },
+  { code: "9988", name: "阿里巴巴", market: "HK", sector: "科技" },
+  { code: "9618", name: "京东集团", market: "HK", sector: "科技" },
+  { code: "1024", name: "快手", market: "HK", sector: "科技" },
+  { code: "3690", name: "美团", market: "HK", sector: "科技" },
+  { code: "9888", name: "百度集团", market: "HK", sector: "科技" },
+  { code: "1810", name: "小米集团", market: "HK", sector: "科技" },
+  { code: "0981", name: "中芯国际", market: "HK", sector: "科技" },
+  { code: "2269", name: "药明生物", market: "HK", sector: "医疗" },
+  { code: "9868", name: "小鹏汽车", market: "HK", sector: "科技" },
+  { code: "2015", name: "理想汽车", market: "HK", sector: "科技" },
+  { code: "9866", name: "蔚来", market: "HK", sector: "科技" },
+  // HK Finance
+  { code: "0388", name: "香港交易所", market: "HK", sector: "金融" },
+  { code: "2318", name: "中国平安", market: "HK", sector: "金融" },
+  { code: "1299", name: "友邦保险", market: "HK", sector: "金融" },
+  { code: "0005", name: "汇丰控股", market: "HK", sector: "金融" },
+  { code: "3968", name: "招商银行", market: "HK", sector: "金融" },
+  { code: "6030", name: "中信证券", market: "HK", sector: "金融" },
+  // HK Consumer
+  { code: "2020", name: "安踏体育", market: "HK", sector: "消费" },
+  { code: "1928", name: "金沙中国", market: "HK", sector: "消费" },
+  { code: "0291", name: "华润啤酒", market: "HK", sector: "消费" },
+  { code: "9633", name: "农夫山泉", market: "HK", sector: "消费" },
+  { code: "9626", name: "哔哩哔哩", market: "HK", sector: "科技" },
+];
+
+function searchStocks(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+  return STOCKS.filter((s) => {
+    const name = s.name.toLowerCase();
+    const code = s.code.toLowerCase();
+    const market = s.market.toLowerCase();
+    const sector = s.sector.toLowerCase();
+    return (
+      name.includes(q) ||
+      code.includes(q) ||
+      sector.includes(q) ||
+      (market === "us" && q === "us") ||
+      (market === "hk" && q === "hk") ||
+      (market === "hk" && q.includes("港")) ||
+      (market === "us" && q.includes("美"))
+    );
+  }).slice(0, 30);
 }
-
-// ─── List: Yahoo Finance — Not directly available ─────────
-// Yahoo doesn't provide a full market list API.
-// We'll return a curated popular list instead.
-const POPULAR_US = [
-  { code: "AAPL", name: "Apple Inc.", market: "US" },
-  { code: "MSFT", name: "Microsoft Corporation", market: "US" },
-  { code: "GOOGL", name: "Alphabet Inc.", market: "US" },
-  { code: "AMZN", name: "Amazon.com Inc.", market: "US" },
-  { code: "NVDA", name: "NVIDIA Corporation", market: "US" },
-  { code: "META", name: "Meta Platforms Inc.", market: "US" },
-  { code: "TSLA", name: "Tesla Inc.", market: "US" },
-  { code: "BRK-B", name: "Berkshire Hathaway Inc.", market: "US" },
-  { code: "JPM", name: "JPMorgan Chase & Co.", market: "US" },
-  { code: "V", name: "Visa Inc.", market: "US" },
-  { code: "JNJ", name: "Johnson & Johnson", market: "US" },
-  { code: "WMT", name: "Walmart Inc.", market: "US" },
-  { code: "XOM", name: "Exxon Mobil Corporation", market: "US" },
-  { code: "PG", name: "Procter & Gamble Co.", market: "US" },
-  { code: "MA", name: "Mastercard Inc.", market: "US" },
-  { code: "HD", name: "Home Depot Inc.", market: "US" },
-  { code: "DIS", name: "Walt Disney Co.", market: "US" },
-  { code: "BABA", name: "Alibaba Group Holding Ltd.", market: "US" },
-  { code: "NFLX", name: "Netflix Inc.", market: "US" },
-  { code: "AMD", name: "Advanced Micro Devices Inc.", market: "US" },
-  { code: "INTC", name: "Intel Corporation", market: "US" },
-  { code: "CSCO", name: "Cisco Systems Inc.", market: "US" },
-  { code: "PFE", name: "Pfizer Inc.", market: "US" },
-  { code: "KO", name: "Coca-Cola Co.", market: "US" },
-  { code: "PEP", name: "PepsiCo Inc.", market: "US" },
-  { code: "ABT", name: "Abbott Laboratories", market: "US" },
-  { code: "CRM", name: "Salesforce Inc.", market: "US" },
-  { code: "ORCL", name: "Oracle Corporation", market: "US" },
-  { code: "TMO", name: "Thermo Fisher Scientific Inc.", market: "US" },
-  { code: "MRK", name: "Merck & Co. Inc.", market: "US" },
-];
-
-const POPULAR_HK = [
-  { code: "0700", name: "腾讯控股", market: "HK" },
-  { code: "9988", name: "阿里巴巴", market: "HK" },
-  { code: "9618", name: "京东集团", market: "HK" },
-  { code: "1024", name: "快手", market: "HK" },
-  { code: "3690", name: "美团", market: "HK" },
-  { code: "9888", name: "百度集团", market: "HK" },
-  { code: "2269", name: "药明生物", market: "HK" },
-  { code: "1810", name: "小米集团", market: "HK" },
-  { code: "0981", name: "中芯国际", market: "HK" },
-  { code: "0941", name: "中国移动", market: "HK" },
-  { code: "2318", name: "中国平安", market: "HK" },
-  { code: "0388", name: "香港交易所", market: "HK" },
-  { code: "1299", name: "友邦保险", market: "HK" },
-  { code: "0005", name: "汇丰控股", market: "HK" },
-  { code: "2020", name: "安踏体育", market: "HK" },
-];
 
 // ─── Main Handler ─────────────────────────────────────────
 export default {
@@ -226,12 +253,7 @@ export default {
           const data = await yahooQuote(symbol);
           if (!data) return error("Failed to fetch quote data", 502);
 
-          return json({
-            ...data,
-            market: market,
-            ticker: data.symbol,
-            currency: data.currency,
-          });
+          return json({ ...data, market, ticker: data.symbol, currency: data.currency });
         }
 
         case "kline": {
@@ -253,35 +275,28 @@ export default {
           const klines = await yahooKline(symbol, interval, range);
           if (!klines) return error("Failed to fetch kline data", 502);
 
-          return json({
-            market,
-            symbol,
-            interval,
-            range,
-            data: klines,
-          });
+          return json({ market, symbol, interval, range, data: klines });
         }
 
         case "search": {
           const q = url.searchParams.get("q");
           if (!q) return error("Missing search query");
-          const results = await yahooSearch(q);
-          // Filter by market if specified
           const market = url.searchParams.get("market");
-          const filtered = market
-            ? results.filter((r) => r.market === market.toUpperCase())
-            : results;
-          return json({ results: filtered });
+          let results = searchStocks(q);
+          if (market) {
+            results = results.filter(
+              (r) => r.market === market.toUpperCase(),
+            );
+          }
+          return json({ results });
         }
 
         case "list": {
           const market = url.searchParams.get("market") || "us";
-          const list = market === "hk" ? POPULAR_HK : POPULAR_US;
-          return json({
-            market,
-            total: list.length,
-            results: list,
-          });
+          const list = STOCKS.filter(
+            (s) => s.market === market.toUpperCase(),
+          );
+          return json({ market, total: list.length, results: list });
         }
 
         default:

@@ -1,6 +1,6 @@
 /**
- * AI Empire Stock Dashboard — Main App v2
- * US + HK stocks, watchlist, screener (Yahoo Finance)
+ * AI Empire Stock Dashboard — Main App v3
+ * US + HK stocks, watchlist, screener, trading-style detail view
  */
 
 const StockApp = (() => {
@@ -23,7 +23,7 @@ const StockApp = (() => {
     dom.searchInput = document.getElementById('searchInput');
     dom.searchSpinner = document.getElementById('searchSpinner');
     dom.searchResults = document.getElementById('searchResults');
-    dom.quoteSection = document.getElementById('quoteSection');
+    dom.detailView = document.getElementById('detailView');
     dom.quoteName = document.getElementById('quoteName');
     dom.quoteTicker = document.getElementById('quoteTicker');
     dom.quoteMarketTag = document.getElementById('quoteMarketTag');
@@ -36,12 +36,20 @@ const StockApp = (() => {
     dom.quoteVolume = document.getElementById('quoteVolume');
     dom.quoteMarketCap = document.getElementById('quoteMarketCap');
     dom.quotePE = document.getElementById('quotePE');
+    dom.quoteEPS = document.getElementById('quoteEPS');
     dom.quotePB = document.getElementById('quotePB');
     dom.quote52High = document.getElementById('quote52High');
     dom.quote52Low = document.getElementById('quote52Low');
     dom.quoteTime = document.getElementById('quoteTime');
+    dom.dayRange = document.getElementById('dayRange');
+    dom.dayRangeLow = document.getElementById('dayRangeLow');
+    dom.dayRangeHigh = document.getElementById('dayRangeHigh');
+    dom.dayRangeMarker = document.getElementById('dayRangeMarker');
+    dom.weekRange = document.getElementById('weekRange');
+    dom.weekRangeLow = document.getElementById('weekRangeLow');
+    dom.weekRangeHigh = document.getElementById('weekRangeHigh');
+    dom.weekRangeMarker = document.getElementById('weekRangeMarker');
     dom.btnWatchlist = document.getElementById('btnWatchlist');
-    dom.chartSection = document.getElementById('chartSection');
     dom.klineCanvas = document.getElementById('klineCanvas');
     dom.screenerSection = document.getElementById('screenerSection');
     dom.screenerResults = document.getElementById('screenerResults');
@@ -70,8 +78,8 @@ const StockApp = (() => {
         dom.searchInput.value = '';
         dom.searchResults.classList.remove('active');
         dom.searchInput.placeholder = currentMarket === 'us'
-          ? '输入美股代码或公司名...'
-          : '输入港股代码或公司名...';
+          ? '输入美股代码或公司名称...'
+          : '输入港股代码或公司名称...';
         updateScreenerVisibility();
       });
     });
@@ -124,10 +132,7 @@ const StockApp = (() => {
 
     dom.presetBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const condition = btn.dataset.condition;
-        const days = btn.dataset.days;
-        const value = btn.dataset.value;
-        runScreener(condition, days, value);
+        runScreener(btn.dataset.condition, btn.dataset.days, btn.dataset.value);
       });
     });
 
@@ -142,16 +147,14 @@ const StockApp = (() => {
       const url = `${API_BASE}/?action=search&q=${encodeURIComponent(q)}`;
       const resp = await fetch(url);
       const data = await resp.json();
-
       dom.searchSpinner.style.display = 'none';
 
-      if (data.error) {
-        showSearchEmpty(data.error);
+      if (data.error || !data.results || data.results.length === 0) {
+        showSearchEmpty('未找到匹配的股票');
         return;
       }
 
-      let results = data.results || [];
-      // Filter by current market
+      let results = data.results;
       if (currentMarket === 'us') {
         results = results.filter(r => r.market === 'US');
       } else {
@@ -159,7 +162,7 @@ const StockApp = (() => {
       }
 
       if (results.length === 0) {
-        showSearchEmpty('未找到匹配的股票');
+        showSearchEmpty('当前市场未找到匹配结果');
         return;
       }
 
@@ -218,11 +221,15 @@ const StockApp = (() => {
       currentTicker = code;
       currentMarket = market;
 
+      // Show detail view
+      dom.detailView.style.display = 'block';
+
       renderQuote(data);
-      dom.quoteSection.style.display = 'block';
-      dom.chartSection.style.display = 'block';
       updateWatchlistBtn();
       loadKline(code, market);
+
+      // Scroll to detail view
+      dom.detailView.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       quoteRefreshTimer = setInterval(() => loadQuoteSilent(code, market), 30000);
 
@@ -246,7 +253,7 @@ const StockApp = (() => {
   }
 
   function renderQuote(data) {
-    const name = data.name || data.name_en || currentTicker;
+    const name = data.name || currentTicker;
     const ticker = data.ticker || currentTicker;
     const market = data.market || currentMarket;
     const currency = data.currency || (market === 'hk' ? 'HKD' : 'USD');
@@ -273,10 +280,33 @@ const StockApp = (() => {
     dom.quoteVolume.textContent = data.volume ? formatVolume(data.volume) : '—';
     dom.quoteMarketCap.textContent = data.market_cap ? formatMarketCap(data.market_cap, currency) : '—';
     dom.quotePE.textContent = data.pe && data.pe > 0 ? data.pe.toFixed(2) : '—';
+    dom.quoteEPS.textContent = data.eps ? data.eps.toFixed(2) : '—';
     dom.quotePB.textContent = data.pb && data.pb > 0 ? data.pb.toFixed(2) : '—';
     dom.quote52High.textContent = data.high_52w ? formatNum(data.high_52w) : '—';
     dom.quote52Low.textContent = data.low_52w ? formatNum(data.low_52w) : '—';
     dom.quoteTime.textContent = data.timestamp ? `最后更新: ${data.timestamp}` : '';
+
+    // Day range bar
+    if (data.low && data.high && data.price) {
+      dom.dayRange.style.display = 'block';
+      dom.dayRangeLow.textContent = formatNum(data.low);
+      dom.dayRangeHigh.textContent = formatNum(data.high);
+      const pct = ((data.price - data.low) / (data.high - data.low)) * 100;
+      dom.dayRangeMarker.style.left = `${Math.max(2, Math.min(98, pct))}%`;
+    } else {
+      dom.dayRange.style.display = 'none';
+    }
+
+    // 52 week range bar
+    if (data.low_52w && data.high_52w && data.price) {
+      dom.weekRange.style.display = 'block';
+      dom.weekRangeLow.textContent = formatNum(data.low_52w);
+      dom.weekRangeHigh.textContent = formatNum(data.high_52w);
+      const pct = ((data.price - data.low_52w) / (data.high_52w - data.low_52w)) * 100;
+      dom.weekRangeMarker.style.left = `${Math.max(2, Math.min(98, pct))}%`;
+    } else {
+      dom.weekRange.style.display = 'none';
+    }
   }
 
   // ─── K-line ────────────────────────────────────────────
@@ -311,9 +341,8 @@ const StockApp = (() => {
 
   // ─── Watchlist ─────────────────────────────────────────
   function getWatchlist() {
-    try {
-      return JSON.parse(localStorage.getItem(WATCHLIST_KEY)) || [];
-    } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY)) || []; }
+    catch { return []; }
   }
 
   function saveWatchlist(list) {
@@ -445,14 +474,13 @@ const StockApp = (() => {
     }
   }
 
-  // ─── Screener (simplified — uses popular stocks) ───────
+  // ─── Screener ──────────────────────────────────────────
   async function runScreener(condition, days, value) {
     if (currentMarket !== 'us') return;
 
     dom.screenerResults.innerHTML = '<div class="loading">正在筛选...</div>';
 
     try {
-      // Fetch popular stocks list
       const listUrl = `${API_BASE}/?action=list&market=us`;
       const listResp = await fetch(listUrl);
       const listData = await listResp.json();
@@ -467,7 +495,6 @@ const StockApp = (() => {
 
       if (condition === 'consecutive_up' || condition === 'consecutive_down') {
         const daysN = parseInt(days) || 5;
-
         const results = await Promise.allSettled(
           stocks.map(async (s) => {
             const kUrl = `${API_BASE}/?action=kline&ticker=${encodeURIComponent(s.code)}&market=us&interval=1d&range=1mo`;
@@ -475,23 +502,17 @@ const StockApp = (() => {
             const kData = await kResp.json();
             const klines = kData.data || [];
             if (klines.length < daysN + 1) return null;
-
             let consecutive = 1;
             for (let i = klines.length - 1; i > klines.length - 1 - daysN; i--) {
-              const curr = klines[i].close;
-              const prev = klines[i - 1].close;
-              if (condition === 'consecutive_up' && curr > prev) consecutive++;
-              else if (condition === 'consecutive_down' && curr < prev) consecutive++;
+              if (condition === 'consecutive_up' && klines[i].close > klines[i - 1].close) consecutive++;
+              else if (condition === 'consecutive_down' && klines[i].close < klines[i - 1].close) consecutive++;
               else break;
             }
-
             if (consecutive > daysN) {
               const last = klines[klines.length - 1];
               const prev = klines[klines.length - 2];
               return {
-                code: s.code,
-                name: s.name,
-                price: last.close,
+                code: s.code, name: s.name, price: last.close,
                 change_pct: prev ? ((last.close - prev.close) / prev.close * 100) : 0,
                 consecutive,
               };
@@ -499,7 +520,6 @@ const StockApp = (() => {
             return null;
           })
         );
-
         filtered = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
 
       } else if (condition === 'pe_below') {
@@ -510,14 +530,7 @@ const StockApp = (() => {
             const qResp = await fetch(qUrl);
             const qData = await qResp.json();
             if (qData.pe && qData.pe > 0 && qData.pe < threshold) {
-              filtered.push({
-                code: s.code,
-                name: qData.name || s.name,
-                price: qData.price,
-                change_pct: qData.change_pct,
-                pe: qData.pe,
-                volume: qData.volume,
-              });
+              filtered.push({ code: s.code, name: qData.name || s.name, price: qData.price, change_pct: qData.change_pct, pe: qData.pe, volume: qData.volume });
             }
           } catch { /* skip */ }
         }
@@ -530,13 +543,7 @@ const StockApp = (() => {
             const qResp = await fetch(qUrl);
             const qData = await qResp.json();
             if (qData.change_pct != null && qData.change_pct > threshold) {
-              filtered.push({
-                code: s.code,
-                name: qData.name || s.name,
-                price: qData.price,
-                change_pct: qData.change_pct,
-                volume: qData.volume,
-              });
+              filtered.push({ code: s.code, name: qData.name || s.name, price: qData.price, change_pct: qData.change_pct, volume: qData.volume });
             }
           } catch { /* skip */ }
         }
@@ -550,25 +557,16 @@ const StockApp = (() => {
             const kData = await kResp.json();
             const klines = kData.data || [];
             if (klines.length < daysN + 1) return null;
-
             const recent = klines.slice(-daysN - 1, -1);
             const highest = Math.max(...recent.map(k => k.high));
             const last = klines[klines.length - 1];
-
             if (last.close > highest) {
               const prev = klines[klines.length - 2];
-              return {
-                code: s.code,
-                name: s.name,
-                price: last.close,
-                change_pct: prev ? ((last.close - prev.close) / prev.close * 100) : 0,
-                volume: last.volume,
-              };
+              return { code: s.code, name: s.name, price: last.close, change_pct: prev ? ((last.close - prev.close) / prev.close * 100) : 0, volume: last.volume };
             }
             return null;
           })
         );
-
         filtered = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
       }
 
@@ -597,21 +595,14 @@ const StockApp = (() => {
     for (const s of stocks) {
       const sign = s.change_pct >= 0 ? '+' : '';
       const cls = s.change_pct > 0 ? 'up' : s.change_pct < 0 ? 'down' : '';
-
       html += `<tr>
         <td class="code-cell" data-code="${escapeHtml(s.code)}" data-market="us">${escapeHtml(s.code)}</td>
         <td>${escapeHtml(s.name)}</td>
         <td>${s.price != null ? formatNum(s.price) : '—'}</td>
         <td class="${cls}">${s.change_pct != null ? sign + s.change_pct.toFixed(2) + '%' : '—'}</td>
         <td>${s.volume != null ? formatVolume(s.volume) : '—'}</td>`;
-
-      if (condition === 'pe_below' && s.pe) {
-        html += `<td>${s.pe.toFixed(2)}</td>`;
-      }
-      if ((condition === 'consecutive_up' || condition === 'consecutive_down') && s.consecutive) {
-        html += `<td class="${condition === 'consecutive_up' ? 'up' : 'down'}">${s.consecutive} 天</td>`;
-      }
-
+      if (condition === 'pe_below' && s.pe) html += `<td>${s.pe.toFixed(2)}</td>`;
+      if ((condition === 'consecutive_up' || condition === 'consecutive_down') && s.consecutive) html += `<td class="${condition === 'consecutive_up' ? 'up' : 'down'}">${s.consecutive} 天</td>`;
       html += '</tr>';
     }
 
@@ -619,9 +610,7 @@ const StockApp = (() => {
     dom.screenerResults.innerHTML = html;
 
     dom.screenerResults.querySelectorAll('.code-cell').forEach(cell => {
-      cell.addEventListener('click', () => {
-        loadQuote(cell.dataset.code, cell.dataset.market);
-      });
+      cell.addEventListener('click', () => loadQuote(cell.dataset.code, cell.dataset.market));
     });
   }
 
@@ -645,7 +634,6 @@ const StockApp = (() => {
 
   function formatMarketCap(v, currency) {
     if (!v || isNaN(v)) return '—';
-    // Yahoo returns marketCap in raw dollars
     if (v >= 1e12) return (v / 1e12).toFixed(2) + 'T';
     if (v >= 1e9) return (v / 1e9).toFixed(2) + 'B';
     if (v >= 1e6) return (v / 1e6).toFixed(2) + 'M';

@@ -222,8 +222,6 @@ body {
 }
 
 /* ─── Quote Card ────────────────────────────────────── */
-.quote-section { margin-bottom: 24px; }
-
 .quote-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -297,6 +295,64 @@ body {
 
 .quote-change.up { color: var(--color-success); background: rgba(48, 209, 88, 0.1); }
 .quote-change.down { color: var(--color-danger); background: rgba(255, 69, 58, 0.1); }
+.quote-change.flat { color: var(--color-text-tertiary); }
+
+/* ─── Range Bars (Day / 52 Week) ────────────────────── */
+.day-range, .week-range {
+  margin-bottom: 20px;
+}
+
+.day-range-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.day-range-title {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.day-range-track {
+  position: relative;
+  height: 4px;
+  background: var(--color-bg-tertiary);
+  border-radius: 2px;
+  margin: 0 4px;
+}
+
+.day-range-marker {
+  position: absolute;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+}
+
+.day-range-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-danger), var(--color-accent), var(--color-success));
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.day-range-labels span:first-child,
+.day-range-labels span:last-child {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  color: var(--color-text-secondary);
+}
 .quote-change.flat { color: var(--color-text-tertiary); }
 
 .btn-watchlist {
