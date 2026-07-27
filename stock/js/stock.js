@@ -7,9 +7,7 @@ const StockApp = (() => {
 
   // ─── Config ────────────────────────────────────────────
   // Change this to your actual Cloudflare Worker URL after deployment
-  const API_BASE = 'https://api.aiempire.today';
-  // For local testing, you can override:
-  // const API_BASE = 'http://localhost:8787';
+  const API_BASE = 'https://stock-proxy.lugdba.workers.dev';
 
   const WATCHLIST_KEY = 'stock_watchlist';
   const STATE_KEY = 'stock_state';
